@@ -1,0 +1,80 @@
+.blocked-hd {
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 14px;
+}
+.blocked-hd p { margin: 6px 0 0; font-size: 14px; }
+
+.panel {
+  padding: 16px 20px;
+  margin: 12px 0;
+}
+
+.praise-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 14px 20px;
+  background: linear-gradient(90deg, rgba(63, 182, 139, 0.12), rgba(22, 28, 36, 0.95));
+  border-color: rgba(63, 182, 139, 0.35);
+}
+
+.praise-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.praise-ico {
+  font-size: 20px;
+}
+
+.section-hd {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.section-hd h2 { margin: 0; font-size: 17px; }
+
+.reasons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.reasons button {
+  padding: 12px 10px;
+  font-size: 15px;
+  font-weight: 500;
+  border-radius: 9px;
+}
+.reasons button.sel {
+  border-color: var(--accent);
+  background: rgba(245, 179, 1, 0.16);
+  color: #ffd86b;
+  font-weight: 600;
+}
+
+.alts { display: grid; gap: 8px; }
+.alt {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  background: var(--panel2);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 10px 14px;
+}
+.alt .ico { font-size: 24px; }
+.alt b { display: block; margin-bottom: 1px; font-size: 14.5px; }
+
+@media (max-width: 560px) {
+  .reasons { grid-template-columns: repeat(2, 1fr); }
+}

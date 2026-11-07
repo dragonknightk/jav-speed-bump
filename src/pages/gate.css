@@ -1,0 +1,321 @@
+.wrap.wide { max-width: 1140px; }
+
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.brand-group {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.target-banner {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 13px;
+  border-radius: 8px;
+  background: rgba(245, 179, 1, 0.1);
+  border: 1px solid rgba(245, 179, 1, 0.3);
+  color: #ffd86b;
+  font-size: 13.5px;
+  font-weight: 500;
+}
+
+.timer-box {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  background: var(--panel);
+  border: 1px solid var(--line-light);
+  padding: 6px 16px;
+  border-radius: 10px;
+}
+
+.timer-label {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.timer {
+  font-variant-numeric: tabular-nums;
+  font-size: 24px;
+  color: var(--accent);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 330px;
+  gap: 20px;
+  align-items: start;
+  margin-top: 18px;
+}
+
+.layout aside .panel { margin-top: 0; }
+@media (max-width: 920px) { .layout { grid-template-columns: 1fr; } }
+
+/* 步骤进度条 */
+.steps { display: flex; gap: 10px; margin: 0 0 14px; }
+.step {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 14.5px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.step.active {
+  border-color: var(--accent);
+  background: rgba(245, 179, 1, 0.08);
+  color: var(--text);
+  font-weight: 600;
+}
+.step.done {
+  border-color: rgba(63, 182, 139, 0.45);
+  background: rgba(63, 182, 139, 0.08);
+  color: var(--accent2);
+}
+
+.notice {
+  background: rgba(245, 179, 1, 0.12);
+  border: 1px solid rgba(245, 179, 1, 0.4);
+  color: #ffe08a;
+  padding: 11px 16px;
+  border-radius: 10px;
+  margin: 0 0 14px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* 题目主面板 */
+.puzzle-panel { padding: 22px 26px 26px; margin-top: 0; }
+.puzzle-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.puzzle-hd h2 { font-size: 22px; margin: 0; }
+
+/* 规则与操作徽章条 */
+.intro-box {
+  background: #10151c;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.intro-rule {
+  font-size: 14.5px;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.intro-keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  font-size: 13.5px;
+  color: var(--text-sub);
+}
+
+.key-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 右侧冲动曲线卡片 */
+.urge { padding: 18px 20px 16px; }
+.urge-hd {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.urge-title { font-size: 14px; font-weight: 600; color: var(--text-sub); }
+.urge-badge {
+  padding: 2px 10px;
+  border-radius: 99px;
+  background: var(--accent-dim);
+  border: 1px solid var(--accent-border);
+  font-size: 12.5px;
+}
+.urge-badge em { font-style: normal; font-weight: 600; color: var(--accent); }
+.urge svg { display: block; width: 100%; height: auto; overflow: visible; }
+.urge-lb {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 8px;
+  position: relative;
+}
+.urge-lb .pk {
+  position: absolute;
+  left: calc(7 / 15 * 100%);
+  transform: translateX(-50%);
+}
+
+/* 流光与脉冲动画 */
+.urge-flow { opacity: 0.55; animation: urge-flow 1.6s linear infinite; }
+@keyframes urge-flow { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
+.urge-ring { transform-box: fill-box; transform-origin: center; animation: urge-ring 0.9s ease-out infinite; }
+@keyframes urge-ring { from { transform: scale(0.6); opacity: 0.9; } to { transform: scale(1.9); opacity: 0; } }
+.urge-dot { transform-box: fill-box; transform-origin: center; animation: urge-dot 0.9s ease-in-out infinite; }
+@keyframes urge-dot { 50% { transform: scale(1.25); } }
+
+/* 右侧机制说明卡片 */
+.rules-card {
+  padding: 16px 18px;
+  margin-top: 14px !important;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.rules-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.5px;
+}
+.rule-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.rule-ico { font-size: 15px; line-height: 1.4; }
+.rule-item b { display: block; color: var(--text-sub); font-weight: 600; margin-bottom: 2px; }
+.rule-item span { color: var(--muted); }
+
+.puzzle { display: flex; flex-direction: column; align-items: center; }
+
+/* 数独 */
+.sudoku {
+  display: grid;
+  grid-template-columns: repeat(6, 60px);
+  border: 3px solid #8a97a8;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.sudoku input {
+  width: 60px;
+  height: 60px;
+  border-radius: 0;
+  border: 1px solid #354150;
+  text-align: center;
+  font-size: 28px;
+  padding: 0;
+  background: #0d1218;
+  caret-color: var(--accent);
+}
+.sudoku input.given { color: #9fb1c6; background: #19212b; font-weight: 600; }
+.sudoku input.bad { color: #ff7b72; background: #3a1716; }
+.sudoku input.c2 { border-right: 3px solid #8a97a8; }
+.sudoku input.r1 { border-bottom: 3px solid #8a97a8; }
+
+/* 数织 */
+.nono { border-collapse: collapse; user-select: none; }
+.nono td { padding: 0; }
+.nono .cell {
+  width: 36px;
+  height: 36px;
+  border: 1px solid #354150;
+  background: #0d1218;
+  cursor: pointer;
+  position: relative;
+}
+.nono .cell.on { background: var(--accent); }
+.nono .cell.x::after {
+  content: "×";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #637285;
+  font-size: 22px;
+}
+.nono .cell.b5 { border-right: 2px solid #8a97a8; }
+.nono .cell.r5 { border-bottom: 2px solid #8a97a8; }
+.nono .rc {
+  text-align: right;
+  padding-right: 10px;
+  font-size: 15px;
+  color: #cfd8e3;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.nono .cc {
+  vertical-align: bottom;
+  text-align: center;
+  font-size: 15px;
+  color: #cfd8e3;
+  line-height: 1.25;
+  padding-bottom: 5px;
+  font-variant-numeric: tabular-nums;
+}
+.nono .rc.ok, .nono .cc.ok { color: var(--accent2); font-weight: 600; }
+
+/* 心算 */
+.arith-q {
+  font-size: 52px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin: 12px 0 18px;
+  font-variant-numeric: tabular-nums;
+}
+.arith input { font-size: 30px; width: 230px; text-align: center; }
+.progress { display: flex; gap: 6px; margin: 8px 0 4px; }
+.progress span { width: 26px; height: 9px; border-radius: 4px; background: var(--panel2); }
+.progress span.done { background: var(--accent2); }
+
+/* 24 点 */
+.cards { display: flex; gap: 14px; margin: 10px 0 18px; }
+.card {
+  width: 82px;
+  height: 108px;
+  border-radius: 12px;
+  background: #f4f1ea;
+  color: #181a1f;
+  font-size: 40px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 0 #b8b2a2;
+  cursor: pointer;
+  transition: transform 0.1s, opacity 0.15s;
+}
+.card:hover { transform: translateY(-2px); }
+.card.used { opacity: 0.32; transform: none; }
+.expr { font-size: 26px; width: 480px; max-width: 90vw; text-align: center; }
+.keys { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; justify-content: center; }
+.keys button { min-width: 54px; font-size: 19px; padding: 9px 16px; }
+
+.puzzle-panel button { padding: 10px 20px; font-size: 15px; }
+.puzzle-panel .msg { font-size: 16px; font-weight: 500; }

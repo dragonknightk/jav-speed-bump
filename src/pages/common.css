@@ -1,0 +1,193 @@
+:root {
+  --bg: #0d1117;
+  --panel: #161c24;
+  --panel2: #1e2632;
+  --panel3: #252f3f;
+  --text: #e8edf4;
+  --text-sub: #c2ccd9;
+  --muted: #8492a6;
+  --accent: #f5b301;
+  --accent-dim: rgba(245, 179, 1, 0.14);
+  --accent-border: rgba(245, 179, 1, 0.38);
+  --accent2: #3fb68b;
+  --accent2-dim: rgba(63, 182, 139, 0.14);
+  --danger: #e5534b;
+  --danger-dim: rgba(229, 83, 75, 0.14);
+  --line: #283240;
+  --line-light: #334052;
+  --radius: 12px;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.6 "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--accent); text-decoration: none; }
+
+.wrap { max-width: 920px; margin: 0 auto; padding: 28px 24px 64px; }
+
+.stripe {
+  height: 8px;
+  background: repeating-linear-gradient(-45deg, var(--accent) 0 16px, #11151c 16px 32px);
+  border-bottom: 1px solid rgba(245, 179, 1, 0.25);
+}
+
+h1 { font-size: 25px; font-weight: 700; letter-spacing: 0.3px; margin: 0; }
+h2 { font-size: 18px; font-weight: 600; margin: 26px 0 10px; color: var(--text); }
+
+.muted { color: var(--muted); }
+.small { font-size: 13px; }
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  margin: 14px 0;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.22);
+}
+
+button, .btn {
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  border: 1px solid var(--line-light);
+  background: var(--panel2);
+  color: var(--text);
+  padding: 8px 16px;
+  border-radius: 9px;
+  transition: all 0.15s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+button:hover, .btn:hover {
+  border-color: var(--accent);
+  background: var(--panel3);
+}
+
+button.primary, .btn.primary {
+  background: var(--accent);
+  color: #11151c;
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+button.primary:hover, .btn.primary:hover {
+  filter: brightness(1.08);
+}
+
+button.danger {
+  border-color: rgba(229, 83, 75, 0.45);
+  background: rgba(229, 83, 75, 0.1);
+  color: #ff9e97;
+}
+
+button.danger:hover {
+  border-color: var(--danger);
+  background: rgba(229, 83, 75, 0.2);
+}
+
+button:disabled { opacity: 0.45; cursor: default; pointer-events: none; }
+
+input[type=text], input[type=number], input:not([type]) {
+  font: inherit;
+  background: #0a0e13;
+  color: var(--text);
+  border: 1px solid var(--line-light);
+  border-radius: 9px;
+  padding: 9px 14px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+input:focus { border-color: var(--accent); }
+
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.spacer { flex: 1; }
+
+.msg { min-height: 24px; margin-top: 10px; font-size: 14px; }
+.msg.err { color: #ff8f87; }
+.msg.ok { color: #6ee7b7; }
+
+.shake { animation: shake 0.35s; }
+@keyframes shake {
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 10px;
+  border-radius: 99px;
+  background: var(--panel2);
+  border: 1px solid var(--line-light);
+  font-size: 12px;
+  color: var(--text-sub);
+  white-space: nowrap;
+}
+
+.tag.amber {
+  background: var(--accent-dim);
+  border-color: var(--accent-border);
+  color: #ffd460;
+}
+
+.tag.green {
+  background: var(--accent2-dim);
+  border-color: rgba(63, 182, 139, 0.4);
+  color: #6ee7b7;
+}
+
+.tag.red {
+  background: var(--danger-dim);
+  border-color: rgba(229, 83, 75, 0.4);
+  color: #ff9e97;
+}
+
+kbd {
+  display: inline-block;
+  padding: 1px 7px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  background: rgba(245, 179, 1, 0.12);
+  border: 1px solid rgba(245, 179, 1, 0.3);
+  border-radius: 5px;
+  line-height: 1.5;
+}
+
+.modal-bg {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 8, 12, 0.72);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+}
+
+.modal {
+  background: var(--panel);
+  border: 1px solid var(--line-light);
+  border-radius: 14px;
+  padding: 24px 26px;
+  max-width: 480px;
+  width: 92%;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+}

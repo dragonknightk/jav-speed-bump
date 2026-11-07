@@ -1,0 +1,3 @@
+# Windows 脚本保持 CRLF + BOM（PowerShell 5.1 读中文需要）
+windows/*.ps1 -text
+windows/*.bat -text

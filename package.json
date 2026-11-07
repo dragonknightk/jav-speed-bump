@@ -1,0 +1,17 @@
+{
+  "name": "jav-speed-bump",
+  "version": "0.6.3",
+  "private": true,
+  "description": "色情减速带 (JAV Speed Bump)：提高触达成本与唤醒大脑前额叶的渐进式戒色扩展。Chrome MV3。",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test \"test/*.test.js\"",
+    "build": "node scripts/build.mjs",
+    "check": "node scripts/check-manifest.mjs",
+    "e2e": "node scripts/e2e.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

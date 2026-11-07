@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>防护设置 · JAV Speed Bump</title>
+<link rel="icon" href="../icons/icon32.png">
+<link rel="stylesheet" href="common.css">
+<link rel="stylesheet" href="options.css">
+</head>
+<body>
+<div class="stripe"></div>
+<div class="wrap">
+  <header class="page-hd">
+    <div>
+      <h1 id="pageTitle">🚧 色情减速带 · 防护设置</h1>
+      <p class="muted sub-desc" id="pageSub">新增防护立即生效 · 解除任何防护均需等待 24 小时冷静期，或当场完成三组难题</p>
+    </div>
+    <div class="row">
+      <a class="btn" id="statsBtn" href="stats.html">📊 数据统计</a>
+      <button class="small" id="langBtn">EN</button>
+    </div>
+  </header>
+
+  <div id="banner"></div>
+
+  <div class="panel pending-panel" id="pendingPanel" hidden>
+    <div class="card-hd">
+      <h2 id="pendingTitle">⏳ 冷静期解锁队列</h2>
+      <span class="tag amber" id="pendingBadge">倒计时期间防护依然有效</span>
+    </div>
+    <div id="pending"></div>
+  </div>
+
+  <!-- 第一功能：屏蔽网站 -->
+  <div class="panel">
+    <div class="card-hd">
+      <h2 id="domainTitle">🌐 屏蔽网站</h2>
+    </div>
+    <p class="muted small card-desc" id="domainDesc"></p>
+    <div class="row">
+      <input id="domainInput" placeholder="输入要屏蔽的域名，如 example.com" style="flex:1;min-width:220px">
+      <button class="primary" id="domainAdd">添加网站</button>
+    </div>
+    <div class="msg" id="domainMsg"></div>
+    <div class="drawer" id="domainDrawer">
+      <div class="drawer-bar">
+        <span id="domainCountLabel"></span>
+        <button class="small" id="domainToggleBtn"></button>
+      </div>
+      <div class="drawer-body" id="domainDrawerBody" hidden>
+        <div class="drawer-search">
+          <input id="domainFilter" placeholder="搜索网站规则..." style="width:100%">
+        </div>
+        <div class="list" id="domainList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 第二功能：搜索关键词 -->
+  <div class="panel">
+    <div class="card-hd">
+      <h2 id="kwTitle">🔍 搜索关键词拦截</h2>
+    </div>
+    <p class="muted small card-desc" id="kwDesc"></p>
+    <div class="row">
+      <input id="kwInput" placeholder="输入要拦截的搜索关键词" style="flex:1;min-width:220px">
+      <button class="primary" id="kwAdd">添加关键词</button>
+    </div>
+    <div class="msg" id="kwMsg"></div>
+    <div class="drawer" id="kwDrawer">
+      <div class="drawer-bar">
+        <span id="kwCountLabel"></span>
+        <button class="small" id="kwToggleBtn"></button>
+      </div>
+      <div class="drawer-body" id="kwDrawerBody" hidden>
+        <div class="drawer-search">
+          <input id="kwFilter" placeholder="搜索关键词规则..." style="width:100%">
+        </div>
+        <div class="list" id="kwList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 第三功能：屏蔽 Steam -->
+  <div class="panel steam-panel" id="steamPanel">
+    <div class="card-hd" style="margin-bottom:12px">
+      <div class="title-group">
+        <h2 id="steamTitle">🎮 屏蔽 Steam</h2>
+        <span id="steamBadge" class="tag">未启用</span>
+      </div>
+      <div class="steam-actions" id="steamActions"></div>
+    </div>
+    <div class="steam-modes" id="steamModes"></div>
+  </div>
+
+  <!-- 防卸载保护（Windows / macOS） -->
+  <div class="panel lock-panel" id="lockPanel">
+    <div class="card-hd">
+      <h2 id="lockTitle">🔒 防卸载保护</h2>
+      <div class="lock-hd-actions">
+        <div class="os-tabs" id="lockOsTabs"></div>
+        <button class="primary" id="downloadLock">📥 下载防卸载上锁工具</button>
+      </div>
+    </div>
+    <p class="muted small card-desc" id="lockDesc"></p>
+    <div class="lock-steps" id="lockSteps"></div>
+    <div class="lock-notice" id="lockMsg" hidden></div>
+    <div class="lock-un" id="lockUn"></div>
+  </div>
+</div>
+<script type="module" src="options.js"></script>
+</body>
+</html>

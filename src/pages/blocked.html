@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>访问已终止 · JAV Speed Bump</title>
+<link rel="icon" href="../icons/icon32.png">
+<link rel="stylesheet" href="common.css">
+<link rel="stylesheet" href="blocked.css">
+</head>
+<body>
+<div class="stripe"></div>
+<div class="wrap">
+  <header class="blocked-hd">
+    <div class="row">
+      <h1 id="headline">🛑 访问已终止</h1>
+      <span class="spacer"></span>
+      <button class="small" id="langBtn">EN</button>
+    </div>
+    <p class="muted" id="what"></p>
+  </header>
+
+  <div class="panel praise-card" id="praise"></div>
+
+  <div class="panel" id="askPanel">
+    <div class="section-hd">
+      <h2 id="askTitle">记录本次触发诱因</h2>
+    </div>
+    <div class="reasons" id="reasons"></div>
+  </div>
+
+  <div class="panel" id="altPanel" hidden>
+    <div class="section-hd">
+      <h2 id="altTitle">立刻做一件小事切换状态</h2>
+    </div>
+    <div class="alts" id="alts"></div>
+    <div class="row" style="margin-top:16px">
+      <button id="more">🔄 换一批建议</button>
+      <span class="spacer"></span>
+      <a class="btn" id="statsLink" href="stats.html">📊 查看数据统计</a>
+      <button class="primary" id="close">关闭当前标签页</button>
+    </div>
+  </div>
+</div>
+<script type="module" src="blocked.js"></script>
+</body>
+</html>

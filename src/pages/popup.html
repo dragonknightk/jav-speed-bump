@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="common.css">
+<style>
+body { width: 300px; }
+.p { padding: 16px 18px; }
+.hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; gap: 6px; }
+.title { font-size: 14px; font-weight: 600; color: var(--text-sub); }
+.n { font-size: 32px; font-weight: 700; color: var(--accent); line-height: 1.15; margin-bottom: 4px; }
+.row a { flex: 1; text-align: center; }
+</style>
+</head>
+<body>
+<div class="stripe"></div>
+<div class="p">
+  <div class="hd">
+    <span class="title" id="title">🚧 累计战胜冲动</span>
+  </div>
+  <div class="n" id="wins">0 次</div>
+  <div class="muted small" id="extra" style="margin-bottom:14px"></div>
+  <div class="row">
+    <a class="btn" id="statsBtn" href="stats.html" target="_blank">📊 数据统计</a>
+    <a class="btn" id="optBtn" href="options.html" target="_blank">⚙️ 防护设置</a>
+  </div>
+</div>
+<script type="module" src="popup.js"></script>
+</body>
+</html>

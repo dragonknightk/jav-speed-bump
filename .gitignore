@@ -1,0 +1,6 @@
+# 私钥绝对不要提交
+keys/
+*.pem
+dist/
+node_modules/
+.DS_Store

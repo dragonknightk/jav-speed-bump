@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>数据统计 · JAV Speed Bump</title>
+<link rel="icon" href="../icons/icon32.png">
+<link rel="stylesheet" href="common.css">
+<style>
+.page-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 18px;
+}
+
+.bento {
+  display: grid;
+  grid-template-columns: 1.35fr repeat(2, 1fr);
+  grid-template-rows: repeat(2, auto);
+  gap: 12px;
+}
+
+.stat {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.stat .label {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.stat .n {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.stat .n.green { color: var(--accent2); }
+
+.stat.hero {
+  grid-row: 1 / span 2;
+  background: linear-gradient(145deg, rgba(245, 179, 1, 0.1) 0%, var(--panel) 75%);
+  border-color: var(--accent-border);
+  padding: 22px 24px;
+}
+
+.stat.hero .label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffd86b;
+}
+
+.stat.hero .n {
+  font-size: 48px;
+  line-height: 1.1;
+  margin: 8px 0 12px;
+}
+
+.stat.hero .hero-sub {
+  font-size: 12.5px;
+  color: var(--text-sub);
+  line-height: 1.5;
+}
+
+.section-bar {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 26px 0 10px;
+}
+.section-bar h2 { margin: 0; font-size: 18px; }
+
+svg text { fill: #8b97a8; font-size: 11px; font-family: inherit; }
+svg .bar { fill: var(--accent); }
+svg .bar.today { fill: var(--accent2); }
+svg .grid { stroke: #283240; }
+svg .val { fill: #e8edf4; font-weight: 600; }
+
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+td, th { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); }
+tr:last-child td { border-bottom: none; }
+th { color: var(--muted); font-weight: 500; font-size: 13px; }
+
+@media (max-width: 760px) {
+  .bento { grid-template-columns: repeat(2, 1fr); }
+  .stat.hero { grid-column: 1 / -1; grid-row: auto; }
+}
+</style>
+</head>
+<body>
+<div class="stripe"></div>
+<div class="wrap">
+  <header class="page-hd">
+    <h1 id="pageTitle">📊 数据统计与复盘</h1>
+    <div class="row">
+      <a class="btn" id="optLink" href="options.html">⚙️ 防护设置</a>
+      <button class="small" id="langBtn">EN</button>
+    </div>
+  </header>
+
+  <div class="bento" id="cards"></div>
+
+  <div class="section-bar">
+    <h2 id="dailyTitle">近 30 天克制趋势</h2>
+    <span class="muted small" id="dailySub">绿色柱代表今日记录</span>
+  </div>
+  <div class="panel" id="daily"></div>
+
+  <div class="section-bar">
+    <h2 id="hourlyTitle">高发时段分布（24 小时）</h2>
+    <span class="muted small" id="hourlySub">柱体较高的时段为冲动易发期，可提前安排运动或外出</span>
+  </div>
+  <div class="panel" id="hourly"></div>
+
+  <div class="section-bar">
+    <h2 id="reasonTitle">触发诱因占比</h2>
+    <span class="muted small" id="reasonNote"></span>
+  </div>
+  <div class="panel" id="reasons"></div>
+
+  <div class="section-bar">
+    <h2 id="recentTitle">近期拦截明细</h2>
+    <span class="muted small" id="recentSub">最近 20 条触发记录</span>
+  </div>
+  <div class="panel"><table id="recent"></table></div>
+</div>
+<script type="module" src="stats.js"></script>
+</body>
+</html>
