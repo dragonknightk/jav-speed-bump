@@ -47,8 +47,8 @@ function applyStaticI18n() {
 
   $('kwTitle').textContent = t('🔍 搜索关键词拦截', '🔍 Blocked Search Keywords');
   $('kwDesc').textContent = t(
-    '在 Google、Bing、百度、B 站、YouTube、Reddit、X 等搜索时触发；多个词用空格分隔表示同时出现。',
-    'Intercepts matching searches on Google, Bing, Baidu, Bilibili, YouTube, Reddit, and X. Space-separated words match together.',
+    '在主流搜索引擎与视频社交平台搜索时触发；多个词用空格分隔表示同时出现。',
+    'Intercepts matching searches across major search engines and video platforms. Space-separated words match together.',
   );
   $('kwInput').placeholder = t('输入要拦截的搜索关键词', 'Enter search keyword to block');
   $('kwAdd').textContent = t('添加关键词', 'Add Keyword');
