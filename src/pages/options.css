@@ -8,6 +8,11 @@
   margin-bottom: 18px;
 }
 
+.page-hd > .row {
+  flex-shrink: 0;
+  flex-wrap: nowrap;
+}
+
 .sub-desc {
   margin: 6px 0 0;
   font-size: 13.5px;

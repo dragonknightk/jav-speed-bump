@@ -18,7 +18,7 @@
 
 To get through, you need to spend about 10 minutes solving three randomly generated math and logic puzzles in a row (6×6 Sudoku, Nonogram, Make 24, and Mental Math). This focused cognitive workout wakes up your dormant prefrontal cortex and helps you ride out the 15-minute physiological urge wave.
 
-![Puzzle Gate UI](store-assets/screenshot-1-puzzle.png)
+![Puzzle Gate UI](store-assets/screenshot-en-1-puzzle.png)
 
 ---
 
@@ -96,9 +96,9 @@ An independent module built specifically for users quitting adult games on Steam
 
 | Puzzle Gate (Sudoku / Nonogram / Make 24 / Mental Math + Urge Curve) | Endpoint Page (Trigger Attribution + State-Switch Ideas) |
 | :---: | :---: |
-| ![Puzzle Gate](store-assets/screenshot-1-puzzle.png) | ![Blocked Page](store-assets/screenshot-2-blocked.png) |
+| ![Puzzle Gate](store-assets/screenshot-en-1-puzzle.png) | ![Blocked Page](store-assets/screenshot-en-2-blocked.png) |
 | **Statistics & Peak Urge Hour Review** | **Settings (Tiered Steam Protection + Embedded Lock Tool)** |
-| ![Statistics](store-assets/screenshot-3-stats.png) | ![Settings](store-assets/screenshot-4-options.png) |
+| ![Statistics](store-assets/screenshot-en-3-stats.png) | ![Settings](store-assets/screenshot-en-4-options.png) |
 
 ---
 
