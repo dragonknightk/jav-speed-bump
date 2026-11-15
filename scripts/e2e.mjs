@@ -183,6 +183,7 @@ await page.bringToFront();
 await page.goto(`${gatePrefix}?mode=unlock&pid=${s.pendingRemovals[0].id}`);
 await page.waitForSelector('#stage > *');
 await sleep(300);
+ok(await page.$eval('#urge', (e) => !e.hidden) && Boolean(await page.$('#urgeSvg svg')), '解锁页同样展示冲动曲线');
 for (let n = 0; n < 3; n++) { await solveCurrent(); await sleep(900); }
 for (let i = 0; i < 40 && !page.url().includes('options.html'); i++) await sleep(100);
 const s2 = await sw.evaluate(() => chrome.storage.local.get('settings').then((x) => x.settings));

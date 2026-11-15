@@ -182,6 +182,7 @@ async function done() {
   const puzzleMs = Date.now() - startTs;
   if (mode === 'unlock') {
     const pid = params.get('pid');
+    sessionStorage.removeItem(unlockSessionKey(pid));
     const p = await applyRemovalNow(pid);
     const unlockedLabel = p ? (p.type === 'steam' ? 'Steam' : p.value) : '';
     location.replace(chrome.runtime.getURL(`src/pages/options.html?unlocked=${encodeURIComponent(unlockedLabel)}`));
@@ -198,12 +199,13 @@ async function done() {
 }
 
 function sessionKey() { return 'jsb-log:' + target; }
+function unlockSessionKey(pid) { return 'jsb-unlock:' + pid; }
 
 function tick() {
   const ms = Date.now() - startTs;
   const m = Math.floor(ms / 60000), s = Math.floor((ms % 60000) / 1000);
   $('timer').textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-  if (mode === 'trigger') renderUrge(ms);
+  renderUrge(ms);
 }
 
 document.addEventListener('visibilitychange', () => {
@@ -216,7 +218,7 @@ $('langBtn').addEventListener('click', toggleLang);
 onLangChange(() => {
   applyStaticI18n();
   refreshCurrentStepChrome();
-  if (mode === 'trigger') renderUrge(Date.now() - startTs);
+  renderUrge(Date.now() - startTs);
 });
 
 async function init() {
@@ -225,9 +227,12 @@ async function init() {
   level = diff.level;
 
   if (mode === 'unlock') {
-    pendingItem = settings.pendingRemovals.find((x) => x.id === params.get('pid'));
+    const pid = params.get('pid');
+    pendingItem = settings.pendingRemovals.find((x) => x.id === pid);
     if (!pendingItem) { location.replace(chrome.runtime.getURL('src/pages/options.html')); return; }
-    $('urge').hidden = true;
+    const savedTs = Number(sessionStorage.getItem(unlockSessionKey(pid)));
+    if (savedTs > 0) startTs = savedTs;
+    else sessionStorage.setItem(unlockSessionKey(pid), String(startTs));
     level = Math.max(level, 2.5);
   } else {
     const rawKind = params.get('kind');
