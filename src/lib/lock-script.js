@@ -2,7 +2,7 @@
 
 const STORE_EXT_ID = 'jlojhodaahihefilcenmaiopkkjkekmb';
 const UPDATE_URL = 'https://clients2.google.com/service/update2/crx';
-const VERSION = '0.6.3';
+const VERSION = '0.6.4';
 
 /** 自动识别当前操作系统：'mac' | 'win' */
 export function detectLockOs() {
