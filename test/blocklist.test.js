@@ -15,8 +15,10 @@ const lists = effectiveLists({});
 
 test('默认名单没有重复、格式正确', () => {
   assert.equal(new Set(ALL_DEFAULT_DOMAINS).size, ALL_DEFAULT_DOMAINS.length);
+  assert.equal(new Set(DEFAULT_KEYWORDS).size, DEFAULT_KEYWORDS.length);
   for (const d of ALL_DEFAULT_DOMAINS) assert.equal(normalizeDomain(d), d);
   assert.ok(ALL_DEFAULT_DOMAINS.length > 100);
+  assert.ok(DEFAULT_KEYWORDS.length > 150);
 });
 
 test('域名匹配含子域名，不误伤相似域名', () => {
@@ -57,7 +59,7 @@ test('classifyUrl 综合', () => {
   assert.equal(classifyUrl('https://missav.com/dm1/xxx', lists).kind, 'domain');
   assert.equal(classifyUrl('https://www.google.com/search?q=nhentai', lists).kind, 'keyword');
   assert.equal(classifyUrl('https://www.baidu.com/s?wd=av%E5%A5%B3%E4%BC%98', lists).kind, 'keyword');
-  assert.equal(classifyUrl('https://some-new-porn-site.net/', lists).kind, 'keyword'); // 域名里带 porn
+  assert.equal(classifyUrl('https://some-new-porn-site.net/', lists), null);
   assert.equal(classifyUrl('https://www.google.com/search?q=java+stream', lists), null);
   assert.equal(classifyUrl('https://developer.mozilla.org/javascript', lists), null);
   assert.equal(classifyUrl('chrome://extensions', lists), null);
@@ -89,7 +91,10 @@ test('新增默认域名在对应分组里，且子域名命中、相似域名�
   assert.equal(matchDomain('ckslb.com', lists.domains), null);
   assert.equal(matchDomain('rou.video.example', lists.domains), null);
   assert.equal(classifyUrl('https://www.google.com/search?q=static+site', lists), null);
-  assert.equal(classifyUrl('https://www.google.com/search?q=static.ckslb.com', lists)?.match, 'static.ckslb.com');
+  assert.equal(classifyUrl('https://www.google.com/search?q=golang+chan', lists), null);
+  assert.equal(classifyUrl('https://www.google.com/search?q=dmm+multimeter', lists), null);
+  assert.equal(classifyUrl('https://www.google.com/search?q=rou+recipe', lists), null);
+  assert.equal(classifyUrl('https://www.google.com/search?q=rou.video', lists)?.match, 'rou.video');
 });
 
 test('用户移除过的默认域名不会重新生效', () => {
@@ -99,11 +104,23 @@ test('用户移除过的默认域名不会重新生效', () => {
   assert.ok(l.domains.includes('keep.example'));
 });
 
-test('搜索词里出现被屏蔽网站名也拦截', () => {
-  const lists = { domains: ALL_DEFAULT_DOMAINS, keywords: DEFAULT_KEYWORDS };
+test('搜索词命中站点品牌词，且屏蔽网站与搜索关键词完全解耦', () => {
   assert.equal(classifyUrl('https://www.google.com/search?q=nhentai+best', lists)?.kind, 'keyword');
-  assert.equal(classifyUrl('https://www.bing.com/search?q=missav.com', lists)?.kind, 'keyword');
+  assert.equal(classifyUrl('https://www.bing.com/search?q=missav.com', lists)?.match, 'missav');
+  assert.equal(classifyUrl('https://www.google.com/search?q=javdb', lists)?.match, 'javdb');
+  assert.equal(classifyUrl('https://www.google.com/search?q=javdb.com', lists)?.match, 'javdb');
   assert.equal(classifyUrl('https://www.google.com/search?q=python+tutorial', lists), null);
+
+  // 移除关键词 missav 后：搜索 missav / missav.com 立即放行，直接访问 missav.com 仍受网站名单保护
+  const afterRmKw = effectiveLists({ removedKeywords: ['missav'] });
+  assert.equal(classifyUrl('https://www.google.com/search?q=missav', afterRmKw), null);
+  assert.equal(classifyUrl('https://www.bing.com/search?q=missav.com', afterRmKw), null);
+  assert.equal(classifyUrl('https://missav.com/dm1/xxx', afterRmKw)?.kind, 'domain');
+
+  // 移除网站 missav.com 后：直接访问 missav.com 立即放行，搜索 missav 仍受关键词名单保护
+  const afterRmDomain = effectiveLists({ removedDomains: ['missav.com'] });
+  assert.equal(classifyUrl('https://missav.com/dm1/xxx', afterRmDomain), null);
+  assert.equal(classifyUrl('https://www.google.com/search?q=missav', afterRmDomain)?.match, 'missav');
 });
 
 test('Steam 分级防护：默认关闭 / 仅拦截客户端下载 (download) / 全面封锁 (full)', () => {

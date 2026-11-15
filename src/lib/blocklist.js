@@ -58,18 +58,42 @@ export const STEAM_KEYWORDS = [
   'steam',
   'steampowered',
   'steamcommunity',
+  'steamdeck',
+  'steamgames',
+  'valvesoftware',
   'steam下载',
   'steam官网',
   'steam安装',
   'steam客户端',
 ];
 
-// 搜索关键词（中英日）。ASCII 关键词按"整词"匹配，避免 "java" 误伤 "jav"。
+// 搜索关键词（中英日 + 站点品牌词）。ASCII 关键词按"整词"匹配，避免 "java" 误伤 "jav"。
 export const DEFAULT_KEYWORDS = [
   'porn', 'pornhub', 'hentai', 'jav', 'xvideos', 'xnxx', 'xhamster', 'nhentai', 'missav', 'jable',
   'hanime', 'rule34', 'onlyfans', 'nsfw', 'r18', 'fc2ppv', 'av女优', 'av女優', 'av在线', '番号',
   '无码', '無碼', '有码', '里番', '裏番', '本子 汉化', '色情', '黄片', '成人视频', '成人影片', '18禁',
   'エロ', 'セックス', 'えろ', '无修正', '無修正', 'av下载', '磁力 番号', '91porn', '草榴', '色花堂',
+  // JAV 站点品牌词
+  'javlibrary', 'javbus', 'javdb', 'supjav', 'javhd', 'javmost', '7mmtv', 'avgle', 'netflav',
+  'javhub', 'javtiful', 'javhdporn', 'javct', 'javfree', 'sukebei', 'onejav', '141jav',
+  'javtrailers', 'javmenu', 'avjoy', 'njav', 'njavtv', 'javgg', 'javsee', 'fc2ppvdb', 'avple',
+  'javplayer', 'highporn', 'javbangers', 'javynow', 'mgstage', 'caribbeancom', '1pondo', 'heyzo',
+  'tokyo-hot', '10musume',
+  // 动漫 / 本子站点品牌词
+  'e-hentai', 'exhentai', 'hanime1', 'hentaihaven', 'hitomi', 'rule34video', 'gelbooru', 'yande',
+  'konachan', 'sankakucomplex', 'hentai2read', 'tsumino', 'simply-hentai', '18comic', 'jmcomic',
+  'wnacg', 'iwara', 'kemono', 'coomer', 'f95zone', 'dlsite', 'luscious', 'hentaigasm', 'hentaimama',
+  '3hentai', 'pururin', 'multporn', 'hentai-foundry', 'hentaifox', 'imhentai', 'asmhentai',
+  'hentai20', 'muchohentai', 'ohentai', 'hentaicity', 'nozomi', 'zerochan', 'danbooru', 'xbooru',
+  'nijie', 'erogamescape', 'vikacg', 'cangku', 'cagame',
+  // 综合成人站点品牌词
+  'pornhubpremium', 'redtube', 'youporn', 'tube8', 'spankbang', 'eporner', 'beeg', 'tnaflix',
+  'youjizz', 'motherless', 'txxx', 'hqporner', 'porntrex', 'chaturbate', 'stripchat', 'bongacams',
+  'fansly', 'livejasmin', 'cam4', 'myfreecams', 'brazzers', 'thisvid', 'porn300', 'xxxbunker',
+  'drtuber', 'sunporno', 'fuq', 'pornone', 'tubegalore', 'ixxx', 'porndig', 'cliphunter', 'heavy-r',
+  'xfreehd', 'pornpics', 'imagefap', 'manyvids', 'clips4sale', 'realitykings', 'naughtyamerica',
+  'bangbros', 'mofos', 'metart', 'sxyprn', 'perfectgirls', 'noodlemagazine', 't66y', 'sehuatang',
+  'xchina', 'hsex', 'rouman5', 'rou.video',
 ];
 
 export function normalizeDomain(input) {
@@ -185,36 +209,9 @@ export function matchKeyword(text, keywords) {
   return null;
 }
 
-/** 主机名里是否带强特征词（只用 ≥4 个字母的 ASCII 关键词，子串匹配） */
-export function matchHostKeyword(host, keywords) {
-  if (!host) return null;
-  const h = host.toLowerCase();
-  for (const kw of keywords) {
-    const k = kw.toLowerCase();
-    if (/^[a-z0-9]{4,}$/.test(k) && h.includes(k)) return kw;
-  }
-  return null;
-}
-
-/** 搜索词里是否直接出现被屏蔽网站的名字（如搜 "nhentai"、"missav.com"） */
-export function matchDomainInQuery(query, domains) {
-  if (!query) return null;
-  const t = query.toLowerCase().normalize('NFKC');
-  for (const d of domains) {
-    if (!d.includes('.')) continue; // 顶级域条目（xxx 等）跳过
-    const label = d.replace(/^www\./, '').split('.')[0];
-    const words = [d];
-    // static.ckslb.com 这类主机名不要把最左一段当成搜索词，否则会拦下 “static”。
-    if (label.length >= 5 && label !== 'static') words.push(label);
-    for (const w of words) {
-      if (new RegExp(`(^|[^a-z0-9])${escapeRe(w)}($|[^a-z0-9])`).test(t)) return d;
-    }
-  }
-  return null;
-}
-
 /**
  * 判断一个 URL 是否应当被拦截。
+ * 网址访问严格匹配 domains 名单，搜索引擎查询严格匹配 keywords 名单，二者互不越界。
  * @returns {null | {kind:'domain'|'keyword'|'steam', domain:string, match:string}}
  */
 export function classifyUrl(url, { domains = [], keywords = [], steamMode = 'off', blockSteam = false } = {}) {
@@ -243,16 +240,10 @@ export function classifyUrl(url, { domains = [], keywords = [], steamMode = 'off
     if (mode === 'full') {
       const skw = matchKeyword(q, STEAM_KEYWORDS);
       if (skw) return { kind: 'steam', domain: host, match: skw };
-      const sdq = matchDomainInQuery(q, STEAM_DOMAINS);
-      if (sdq) return { kind: 'steam', domain: host, match: sdq };
     }
     const kw = matchKeyword(q, keywords);
     if (kw) return { kind: 'keyword', domain: host, match: kw };
-    const dq = matchDomainInQuery(q, domains);
-    if (dq) return { kind: 'keyword', domain: host, match: dq };
   }
-  const hk = matchHostKeyword(host, keywords);
-  if (hk) return { kind: 'keyword', domain: host, match: hk };
   return null;
 }
 
