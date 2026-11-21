@@ -3,7 +3,7 @@
   <h1>🚧 色情减速带 · JAV Speed Bump</h1>
   <p><b>「堵死一扇门，上头时你只会想办法撬锁；如果在门前修十道减速带，你走着走着就清醒了。」</b></p>
   <p>
-    <a href="https://chromewebstore.google.com/detail/%E8%89%B2%E6%83%85%E5%87%8F%E9%80%9F%E5%B8%A6-jav-speed-bump/jlojhodaahihefilcenmaiopkkjkekmb"><img src="https://img.shields.io/badge/Chrome_Web_Store-v0.6.5_一键安装-f5b301?style=flat-square&logo=googlechrome&logoColor=white" alt="Chrome Web Store"></a>
+    <a href="https://chromewebstore.google.com/detail/%E8%89%B2%E6%83%85%E5%87%8F%E9%80%9F%E5%B8%A6-jav-speed-bump/jlojhodaahihefilcenmaiopkkjkekmb"><img src="https://img.shields.io/badge/Chrome_Web_Store-v0.6.6_一键安装-f5b301?style=flat-square&logo=googlechrome&logoColor=white" alt="Chrome Web Store"></a>
     <img src="https://img.shields.io/badge/Manifest-V3-3fb68b?style=flat-square&logo=googlechrome&logoColor=white" alt="Manifest V3">
     <img src="https://img.shields.io/badge/Privacy-100%25_Local_Storage-3b82f6?style=flat-square" alt="100% Local">
     <img src="https://img.shields.io/badge/Policy_Lock-Windows_%26_macOS-8b5cf6?style=flat-square" alt="Windows & macOS Lock">
