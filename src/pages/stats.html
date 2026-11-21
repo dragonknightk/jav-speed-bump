@@ -89,7 +89,7 @@ svg .grid { stroke: #283240; }
 svg .val { fill: #e8edf4; font-weight: 600; }
 
 table { width: 100%; border-collapse: collapse; font-size: 14px; }
-td, th { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); }
+td, th { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); word-break: break-word; }
 tr:last-child td { border-bottom: none; }
 th { color: var(--muted); font-weight: 500; font-size: 13px; }
 
@@ -113,8 +113,8 @@ th { color: var(--muted); font-weight: 500; font-size: 13px; }
   <div class="bento" id="cards"></div>
 
   <div class="section-bar">
-    <h2 id="dailyTitle">近 30 天克制趋势</h2>
-    <span class="muted small" id="dailySub">绿色柱代表今日记录</span>
+    <h2 id="dailyTitle">近 30 天触发趋势</h2>
+    <span class="muted small" id="dailySub">柱体越低越平稳 · 绿色柱代表今日</span>
   </div>
   <div class="panel" id="daily"></div>
 

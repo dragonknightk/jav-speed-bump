@@ -22,15 +22,28 @@ export function byHour(logs) {
   return out;
 }
 
-export function byReason(logs) {
+export function byReason(logs, { reviewedOnly = false } = {}) {
+  const src = reviewedOnly ? logs.filter((l) => l.completed || Boolean(l.reason)) : logs;
   const out = REASONS.map((r) => ({ key: r.key, label: r.label, count: 0 }));
   let unknown = 0;
-  for (const l of logs) {
+  for (const l of src) {
     const r = out.find((x) => x.key === l.reason);
     if (r) r.count++; else unknown++;
   }
   out.push({ key: null, label: '未选择', count: unknown });
   return out;
+}
+
+/**
+ * 单条拦截记录的当前状态：completed（已完成解题）/ in_progress（解题中）/ walked_away（中途离开）。
+ * 传入 activeIds（当前存活的 gate.html 对应 logId 集合）时实时判定；否则回退到 1 小时阈值。
+ */
+export function logStatus(log, now = Date.now(), activeIds = null) {
+  if (log.completed) return 'completed';
+  if (activeIds instanceof Set) {
+    return activeIds.has(log.id) ? 'in_progress' : 'walked_away';
+  }
+  return now - log.ts > 3600000 ? 'walked_away' : 'in_progress';
 }
 
 /** 当前连续未触发时长 & 最长纪录（毫秒）。since 为开始统计的时间（如安装时间） */
@@ -44,17 +57,26 @@ export function streaks(logs, now = Date.now(), since = null) {
   return { current, longest };
 }
 
-export function summary(logs, now = Date.now()) {
+export function summary(logs, now = Date.now(), activeIds = null) {
   const today = dayKey(now);
   const weekAgo = now - 7 * DAY;
-  const done = logs.filter((l) => l.completed && l.puzzleMs);
+  const doneWithMs = logs.filter((l) => l.completed && l.puzzleMs);
+  let completed = 0;
+  let inProgress = 0;
+  let walkedAway = 0;
+  for (const l of logs) {
+    const st = logStatus(l, now, activeIds);
+    if (st === 'completed') completed++;
+    else if (st === 'in_progress') inProgress++;
+    else walkedAway++;
+  }
   return {
     total: logs.length,
     today: logs.filter((l) => dayKey(l.ts) === today).length,
     week: logs.filter((l) => l.ts >= weekAgo).length,
-    completed: done.length,
-    // 没做完题就离开的（超过 1 小时仍未完成），说明直接关掉了，也算拦住一次
-    walkedAway: logs.filter((l) => !l.completed && now - l.ts > 3600000).length,
-    avgPuzzleMin: done.length ? done.reduce((s, l) => s + l.puzzleMs, 0) / done.length / 60000 : 0,
+    completed,
+    inProgress,
+    walkedAway,
+    avgPuzzleMin: doneWithMs.length ? doneWithMs.reduce((s, l) => s + l.puzzleMs, 0) / doneWithMs.length / 60000 : 0,
   };
 }

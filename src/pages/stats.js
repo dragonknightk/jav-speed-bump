@@ -1,6 +1,6 @@
 import { h } from './ui/h.js';
-import { getLogs } from '../lib/storage.js';
-import { byDay, byHour, byReason, streaks, summary } from '../lib/stats.js';
+import { getLogs, getActiveGateLogIds } from '../lib/storage.js';
+import { byDay, byHour, byReason, streaks, summary, logStatus } from '../lib/stats.js';
 import { reasonText } from '../lib/reasons.js';
 import { formatDuration, dayKey } from '../lib/time.js';
 import { t, isEn, toggleLang, onLangChange } from '../lib/i18n.js';
@@ -66,25 +66,32 @@ async function init() {
   document.getElementById('langBtn').textContent = isEn() ? '中文' : 'EN';
   document.getElementById('pageTitle').textContent = t('📊 数据统计与复盘', '📊 Statistics & Review');
   document.getElementById('optLink').textContent = t('⚙️ 防护设置', '⚙️ Settings');
-  document.getElementById('dailyTitle').textContent = t('近 30 天克制趋势', 'Last 30 Days');
-  document.getElementById('dailySub').textContent = t('绿色柱代表今日记录', 'Green bar indicates today');
+  document.getElementById('dailyTitle').textContent = t('近 30 天触发趋势', 'Last 30 Days Triggers');
+  document.getElementById('dailySub').textContent = t('柱体越低越平稳 · 绿色柱代表今日', 'Lower bars mean calmer days · Green bar indicates today');
   document.getElementById('hourlyTitle').textContent = t('高发时段分布（24 小时）', 'Triggers by Hour of Day (0–23h)');
   document.getElementById('hourlySub').textContent = t('柱体较高的时段为冲动易发期，可提前安排运动或外出', 'Taller bars show peak urge hours—plan offline activities ahead');
   document.getElementById('reasonTitle').textContent = t('触发诱因占比', 'Triggers by Reason');
   document.getElementById('recentTitle').textContent = t('近期拦截明细', 'Recent Activity');
   document.getElementById('recentSub').textContent = t('最近 20 条触发记录', 'Latest 20 records');
 
-  const logs = (await getLogs()).filter((l) => !l.unlock);
+  const [logsAll, activeIds, { installedAt }] = await Promise.all([
+    getLogs(),
+    getActiveGateLogIds().catch(() => new Set()),
+    chrome.storage.local.get('installedAt'),
+  ]);
+  const logs = logsAll.filter((l) => !l.unlock);
   const now = Date.now();
-  const { installedAt } = await chrome.storage.local.get('installedAt');
   let since = installedAt;
   if (!since) { since = logs[0]?.ts ?? now; await chrome.storage.local.set({ installedAt: since }); }
   const st = streaks(logs, now, since);
-  const sm = summary(logs, now);
+  const sm = summary(logs, now, activeIds);
   const card = (label, n, cls = '') => h('div', { class: 'stat' }, h('div', { class: 'label' }, label), h('div', { class: 'n ' + cls }, n));
 
-  const heroSub = sm.walkedAway
-    ? t(`包含完成题组与 ${sm.walkedAway} 次中途主动关闭页面离开的记录`, `Includes completed puzzles and ${sm.walkedAway} early tab closures`)
+  const heroSub = (sm.walkedAway || sm.inProgress)
+    ? t(
+      `包含 ${sm.completed} 次完成题组、${sm.walkedAway} 次中途主动离开${sm.inProgress ? `（${sm.inProgress} 次进行中）` : ''}`,
+      `Includes ${sm.completed} completed, ${sm.walkedAway} early exits${sm.inProgress ? ` (${sm.inProgress} in progress)` : ''}`,
+    )
     : t('每次被拦截或中途主动关页离开均计入克制成果', 'Every interception or early tab closure counts as a win');
 
   document.getElementById('cards').replaceChildren(
@@ -95,16 +102,31 @@ async function init() {
     card(t('当前连续未触发', 'Current Clean Streak'), formatDuration(st.current), 'green'),
     card(t('历史最长间隔', 'Longest Streak'), formatDuration(st.longest)),
     card(t('今日 / 近 7 天', 'Today / Last 7 Days'), t(`${sm.today} / ${sm.week} 次`, `${sm.today} / ${sm.week}`)),
-    card(t('平均解题用时', 'Avg Puzzle Time'), sm.completed ? t(`${sm.avgPuzzleMin.toFixed(1)} 分钟`, `${sm.avgPuzzleMin.toFixed(1)} min`) : '-'),
+    card(t('平均解题用时', 'Avg Puzzle Time'), sm.avgPuzzleMin > 0 ? t(`${sm.avgPuzzleMin.toFixed(1)} 分钟`, `${sm.avgPuzzleMin.toFixed(1)} min`) : '-'),
   );
 
   const today = dayKey(now);
   document.getElementById('daily').replaceChildren(barChart(byDay(logs, 30, now), { labelEvery: 3, highlight: (d) => d.key === today }));
   document.getElementById('hourly').replaceChildren(barChart(byHour(logs), { height: 160, labelEvery: 1 }));
-  document.getElementById('reasons').replaceChildren(hBarChart(byReason(logs)));
+  const reviewedCount = logs.filter((l) => l.completed || Boolean(l.reason)).length;
+  document.getElementById('reasons').replaceChildren(hBarChart(byReason(logs, { reviewedOnly: true })));
   document.getElementById('reasonNote').textContent = sm.walkedAway
-    ? t(`共记录 ${sm.total} 次拦截（其中 ${sm.walkedAway} 次未做完题即主动离开）`, `${sm.total} total (${sm.walkedAway} walked away early)`)
-    : t(`共记录 ${sm.total} 次拦截`, `${sm.total} total`);
+    ? t(
+      `基于 ${reviewedCount} 次复盘记录（另有 ${sm.walkedAway} 次中途直接离开未进入复盘）`,
+      `Based on ${reviewedCount} reviewed records (${sm.walkedAway} walked away before review)`,
+    )
+    : t(`共 ${reviewedCount} 次复盘记录`, `${reviewedCount} reviewed records`);
+
+  const formatRowDuration = (l) => {
+    const status = logStatus(l, now, activeIds);
+    if (status === 'completed') {
+      return l.puzzleMs
+        ? t(`${(l.puzzleMs / 60000).toFixed(1)} 分钟`, `${(l.puzzleMs / 60000).toFixed(1)} min`)
+        : t('已完成', 'Completed');
+    }
+    if (status === 'in_progress') return t('进行中', 'In progress');
+    return t('中途离开', 'Walked away');
+  };
 
   const recent = logs.slice(-20).reverse();
   document.getElementById('recent').replaceChildren(
@@ -119,7 +141,7 @@ async function init() {
       h('td', {}, kindBadge(l)),
       h('td', {}, l.domain + (l.kind === 'keyword' || (l.kind === 'steam' && l.match && l.match !== l.domain) ? ` (${l.match})` : '')),
       h('td', {}, reasonText(l.reason)),
-      h('td', {}, l.completed && l.puzzleMs ? t(`${(l.puzzleMs / 60000).toFixed(1)} 分钟`, `${(l.puzzleMs / 60000).toFixed(1)} min`) : t('中途离开', 'Walked away'))))
+      h('td', {}, formatRowDuration(l))))
       : [h('tr', {}, h('td', { colspan: 5, class: 'muted' }, t('暂无触发记录', 'No records yet')))]));
 }
 
