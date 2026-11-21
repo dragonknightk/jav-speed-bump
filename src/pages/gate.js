@@ -97,7 +97,7 @@ function applyStaticI18n() {
 
   const rules = [
     ['🧠', t('专注逻辑解题', 'Focus on puzzles'), t('让冲动自然回落', 'to let the urge fade')],
-    ['🔄', t('切屏或最小化', 'Switching or minimizing'), t('将自动重置题组', 'resets the puzzles')],
+    ['🔄', t('切屏或最小化', 'Switch or minimize'), t('将自动重置题组', 'resets the puzzles')],
     ['🛡️', t('随时关闭本页', 'Closing this tab'), t('同样算战胜冲动', 'still counts as a win')],
   ];
   const sep = isEn() ? ' ' : '';

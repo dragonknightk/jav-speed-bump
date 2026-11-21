@@ -117,6 +117,7 @@
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 .step {
+  display: block;
   min-width: 0;
   padding: 10px 12px;
   border-radius: 10px;
@@ -125,9 +126,7 @@
   color: var(--muted);
   font-size: 14px;
   font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  line-height: 1.35;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -517,7 +516,7 @@
   .reset-toast { font-size: 13px; padding: 8px 14px; }
 }
 @media (max-width: 640px) {
-  .steps { gap: 8px; }
-  .step { padding: 8px 10px; font-size: 13px; }
+  .steps { gap: 6px; }
+  .step { padding: 8px 7px; font-size: 12px; }
   .steps:has(.bonus) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
