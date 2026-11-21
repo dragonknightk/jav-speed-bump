@@ -3,7 +3,7 @@
   <h1>🚧 JAV Speed Bump</h1>
   <p><b>"Lock a door, and an impulsive mind will only look for a crowbar. Build ten speed bumps in front of it, and you'll come to your senses before you reach the handle."</b></p>
   <p>
-    <a href="https://chromewebstore.google.com/detail/%E8%89%B2%E6%83%85%E5%87%8F%E9%80%9F%E5%B8%A6-jav-speed-bump/jlojhodaahihefilcenmaiopkkjkekmb"><img src="https://img.shields.io/badge/Chrome_Web_Store-v0.6.6_Install-f5b301?style=flat-square&logo=googlechrome&logoColor=white" alt="Chrome Web Store"></a>
+    <a href="https://chromewebstore.google.com/detail/%E8%89%B2%E6%83%85%E5%87%8F%E9%80%9F%E5%B8%A6-jav-speed-bump/jlojhodaahihefilcenmaiopkkjkekmb"><img src="https://img.shields.io/badge/Chrome_Web_Store-v0.7.0_Install-f5b301?style=flat-square&logo=googlechrome&logoColor=white" alt="Chrome Web Store"></a>
     <img src="https://img.shields.io/badge/Manifest-V3-3fb68b?style=flat-square&logo=googlechrome&logoColor=white" alt="Manifest V3">
     <img src="https://img.shields.io/badge/Privacy-100%25_Local_Storage-3b82f6?style=flat-square" alt="100% Local">
     <img src="https://img.shields.io/badge/Policy_Lock-Windows_%26_macOS-8b5cf6?style=flat-square" alt="Windows & macOS Lock">
