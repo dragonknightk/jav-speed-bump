@@ -128,7 +128,7 @@ async function init() {
     return t('中途离开', 'Walked away');
   };
 
-  const recent = logs.slice(-20).reverse();
+  const recent = [...logs].sort((a, b) => b.ts - a.ts).slice(0, 20);
   document.getElementById('recent').replaceChildren(
     h('tr', {},
       h('th', {}, t('触发时间', 'Time')),

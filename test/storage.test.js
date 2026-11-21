@@ -69,6 +69,19 @@ test('addItem 校验域名与归一化关键词，移除自定义项不污染 re
   assert.ok(s.removedDomains.includes('pornhub.com'));
 });
 
+test('重新添加冷静期中的内置规则会自动取消移除且不写入 custom 副本', async () => {
+  setupChromeMock();
+  const p = await requestRemoval('domain', 'pornhub.com');
+  let s = await getSettings();
+  assert.equal(s.pendingRemovals.length, 1);
+  assert.equal(s.pendingRemovals[0].id, p.id);
+
+  await addItem('domain', 'pornhub.com');
+  s = await getSettings();
+  assert.equal(s.pendingRemovals.length, 0);
+  assert.ok(!s.customDomains.includes('pornhub.com'));
+});
+
 test('活跃解题页登记与存活标签页交集精确过滤', async () => {
   const liveTabs = [{ id: 101 }];
   setupChromeMock(liveTabs);

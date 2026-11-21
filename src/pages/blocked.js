@@ -60,7 +60,9 @@ function renderPage() {
   }
 
   const mins = entryCache?.puzzleMs ? Math.max(1, Math.round(entryCache.puzzleMs / 60000)) : null;
-  const before = logsCache.filter((l) => l.id !== logId && l.ts < (entryCache?.ts ?? Date.now()));
+  const before = logsCache
+    .filter((l) => !l.unlock && l.id !== logId && l.ts < (entryCache?.ts ?? Date.now()))
+    .sort((a, b) => a.ts - b.ts);
   const last = before[before.length - 1];
 
   $('praise').replaceChildren(

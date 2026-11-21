@@ -379,7 +379,7 @@ async function add(type) {
       return;
     }
     const d = check.domain;
-    if (ALL_DEFAULT_DOMAINS.includes(d) && !settings.removedDomains.includes(d)) {
+    if (ALL_DEFAULT_DOMAINS.includes(d) && !settings.removedDomains.includes(d) && !isPending('domain', d)) {
       msg.className = 'msg ok';
       msg.textContent = t(`✓ 「${d}」已在内置规则库中生效，无需重复添加`, `✓ "${d}" is already active in the built-in rules`);
       input.value = '';
@@ -389,13 +389,13 @@ async function add(type) {
     const k = normalizeKeyword(raw);
     const removedK = new Set(settings.removedKeywords.map(normalizeKeyword).filter(Boolean));
     const customK = new Set(settings.customKeywords.map(normalizeKeyword).filter(Boolean));
-    if (k && DEFAULT_KEYWORDS.includes(k) && !removedK.has(k)) {
+    if (k && DEFAULT_KEYWORDS.includes(k) && !removedK.has(k) && !isPending('keyword', k)) {
       msg.className = 'msg ok';
       msg.textContent = t(`✓ 「${k}」已在内置规则库中生效，无需重复添加`, `✓ "${k}" is already active in the built-in rules`);
       input.value = '';
       return;
     }
-    if (k && customK.has(k) && !removedK.has(k)) {
+    if (k && customK.has(k) && !removedK.has(k) && !isPending('keyword', k)) {
       msg.className = 'msg ok';
       msg.textContent = t(`✓ 「${k}」已在自定义规则中生效，无需重复添加`, `✓ "${k}" is already active in your custom rules`);
       input.value = '';

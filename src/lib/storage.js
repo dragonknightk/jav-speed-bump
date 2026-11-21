@@ -134,10 +134,11 @@ export function addItem(type, raw) {
     if (!value || (type === 'domain' && !isValidDomain(value))) return { ok: false, error: 'invalid' };
     const customKey = type === 'domain' ? 'customDomains' : 'customKeywords';
     const removedKey = type === 'domain' ? 'removedDomains' : 'removedKeywords';
+    const isDefault = type === 'domain' ? ALL_DEFAULT_DOMAINS.includes(value) : DEFAULT_KEYWORDS.includes(value);
     const norm = type === 'domain' ? (v) => v : normalizeKeyword;
     s[removedKey] = s[removedKey].filter((v) => norm(v) !== value);
     s.pendingRemovals = s.pendingRemovals.filter((p) => !(p.type === type && norm(p.value) === value));
-    if (!s[customKey].some((v) => norm(v) === value)) s[customKey].push(value);
+    if (!isDefault && !s[customKey].some((v) => norm(v) === value)) s[customKey].push(value);
     await saveSettings(s);
     return { ok: true, value };
   });

@@ -44,12 +44,20 @@ export function mount(root, params, onDone) {
     placeholder: t('输入算式，例如 (8 − 4) × 6', 'e.g. (8 − 4) × 6'),
   });
   const msg = h('div', { class: 'msg' });
-  const ins = (s) => {
+  const ins = (s, { isNumber = false } = {}) => {
     if (finished) return;
     const a = input.selectionStart ?? input.value.length, b = input.selectionEnd ?? a;
-    input.value = input.value.slice(0, a) + s + input.value.slice(b);
+    const before = input.value.slice(0, a);
+    const after = input.value.slice(b);
+    let chunk = s;
+    if (isNumber) {
+      if (/\d$/.test(before)) chunk = ' ' + chunk;
+      if (/^\d/.test(after)) chunk = chunk + ' ';
+    }
+    input.value = before + chunk + after;
+    const pos = a + chunk.length;
     input.focus();
-    input.setSelectionRange(a + s.length, a + s.length);
+    input.setSelectionRange(pos, pos);
     markUsed();
   };
   const backspace = () => {
@@ -113,7 +121,7 @@ export function mount(root, params, onDone) {
   }
   function render() {
     updateCounterText();
-    cards.replaceChildren(...sets[k].nums.map((v) => h('div', { class: 'card', 'data-v': v, onclick: () => ins(String(v)) }, String(v))));
+    cards.replaceChildren(...sets[k].nums.map((v) => h('div', { class: 'card', 'data-v': v, onclick: () => ins(String(v), { isNumber: true }) }, String(v))));
     input.value = '';
     input.focus();
   }
