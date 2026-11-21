@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   classifyUrl, matchDomain, matchKeyword, searchQueryOf, normalizeDomain,
+  isValidDomain, isDnrSafeDomain, validateDomainInput, normalizeKeyword,
   effectiveLists, ALL_DEFAULT_DOMAINS, DEFAULT_DOMAINS, DEFAULT_KEYWORDS,
   STEAM_DOMAINS, STEAM_KEYWORDS, isSteamDomain, isSteamDownloadUrl,
 } from '../src/lib/blocklist.js';
@@ -33,6 +34,57 @@ test('normalizeDomain', () => {
   assert.equal(normalizeDomain('https://www.Example.com/path?q=1'), 'example.com');
   assert.equal(normalizeDomain('*.foo.org'), 'foo.org');
   assert.equal(normalizeDomain('  bar.net:8080 '), 'bar.net');
+  assert.equal(normalizeDomain('www.com'), 'www.com');
+  assert.equal(normalizeDomain('www.com/a.html'), 'www.com');
+});
+
+test('域名校验拒绝裸顶级域、非法连字符、纯 IP 与中文误填，同时放行标准域名', () => {
+  assert.equal(isValidDomain('example.com'), true);
+  assert.equal(isValidDomain('sub.example.co.jp'), true);
+  assert.equal(isValidDomain('www.com'), true);
+  assert.equal(isValidDomain('com'), false);
+  assert.equal(isValidDomain('pornhub'), false);
+  assert.equal(isValidDomain('-bad.com'), false);
+  assert.equal(isValidDomain('bad-.com'), false);
+  assert.equal(isValidDomain('---'), false);
+  assert.equal(isValidDomain('192.168.1.1'), false);
+  assert.equal(isValidDomain('a..b.com'), false);
+
+  assert.equal(isDnrSafeDomain('example.com'), true);
+  assert.equal(isDnrSafeDomain('xxx'), true);
+  assert.equal(isDnrSafeDomain('-bad.com'), false);
+  assert.equal(isDnrSafeDomain('192.168.1.1'), false);
+
+  assert.deepEqual(validateDomainInput('https://www.MissAV.ws/cn/1'), { ok: true, domain: 'missav.ws' });
+  assert.equal(validateDomainInput('com').reason, 'no_dot');
+  assert.equal(validateDomainInput('pornhub').reason, 'no_dot');
+  assert.equal(validateDomainInput('色情').reason, 'no_dot');
+  assert.equal(validateDomainInput('-bad.com').reason, 'invalid');
+  assert.equal(validateDomainInput('192.168.1.1').reason, 'invalid');
+  assert.equal(validateDomainInput('foo bar').reason, 'invalid');
+  assert.equal(validateDomainInput('   ').reason, 'empty');
+});
+
+test('关键词归一化去重与 Google 办公站点不误伤', () => {
+  for (const k of DEFAULT_KEYWORDS) assert.equal(normalizeKeyword(k), k);
+  assert.equal(normalizeKeyword('  ＪＡＶ  '), 'jav');
+  assert.equal(normalizeKeyword('本子   汉化'), '本子 汉化');
+
+  const dedup = effectiveLists({ customKeywords: ['JAV', 'My  Word', 'my word'], removedKeywords: ['PORN'] });
+  assert.equal(dedup.keywords.filter((k) => k === 'jav').length, 1);
+  assert.equal(dedup.keywords.filter((k) => k === 'my word').length, 1);
+  assert.ok(!dedup.keywords.includes('porn'));
+
+  // Google 网页搜索正常命中，非搜索子域与地图路径放行
+  assert.equal(searchQueryOf('https://google.co.jp/search?q=jav'), 'jav');
+  assert.equal(searchQueryOf('https://m.google.com/search?q=jav'), 'jav');
+  assert.equal(searchQueryOf('https://www.google.com/?q=jav'), 'jav');
+  assert.equal(searchQueryOf('https://mail.google.com/mail/u/0/?q=jav'), null);
+  assert.equal(searchQueryOf('https://drive.google.com/drive/search?q=jav'), null);
+  assert.equal(searchQueryOf('https://docs.google.com/document/?q=jav'), null);
+  assert.equal(searchQueryOf('https://play.google.com/store/search?q=steam'), null);
+  assert.equal(searchQueryOf('https://scholar.google.com/scholar?q=jav'), null);
+  assert.equal(searchQueryOf('https://www.google.com/maps?q=steam'), null);
 });
 
 test('搜索词提取', () => {

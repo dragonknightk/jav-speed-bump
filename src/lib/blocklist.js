@@ -99,17 +99,56 @@ export const DEFAULT_KEYWORDS = [
 export function normalizeDomain(input) {
   let s = String(input || '').trim().toLowerCase();
   if (!s) return '';
-  s = s.replace(/^[a-z]+:\/\//, '').replace(/^\*\./, '').replace(/^www\./, '');
+  s = s.replace(/^[a-z]+:\/\//, '');
   s = s.split(/[/?#:]/)[0];
+  s = s.replace(/^\*\./, '');
   s = s.replace(/\.+$/, '');
+  if (s.startsWith('www.') && s.slice(4).includes('.')) {
+    s = s.slice(4);
+  }
   if (!/^[a-z0-9.-]+$/.test(s)) {
     try { s = new URL('http://' + s).hostname; } catch { return ''; }
   }
   return s;
 }
 
+const DOMAIN_LABEL_RE = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
+const TLD_LABEL_RE = /^(?:[a-z]{2,63}|xn--[a-z0-9-]{1,58}[a-z0-9])$/;
+
+/** 严格标准多段域名（至少包含一个点号，符合 RFC 1123，拒绝裸顶级域、非法连字符与纯 IP） */
 export function isValidDomain(d) {
-  return /^([a-z0-9-]+\.)*[a-z0-9-]+$/.test(d) && d.length <= 253;
+  if (!d || typeof d !== 'string' || d.length > 253) return false;
+  const labels = d.split('.');
+  if (labels.length < 2) return false;
+  for (const label of labels) {
+    if (!DOMAIN_LABEL_RE.test(label)) return false;
+  }
+  return TLD_LABEL_RE.test(labels[labels.length - 1]);
+}
+
+/** 是否可安全写入 Chrome DNR requestDomains（合法标准域名，或内置合法顶级域如 xxx/porn） */
+export function isDnrSafeDomain(d) {
+  if (isValidDomain(d)) return true;
+  return typeof d === 'string' && !d.includes('.') && TLD_LABEL_RE.test(d);
+}
+
+/** 校验用户输入的域名，返回细分原因便于精准提示 */
+export function validateDomainInput(raw) {
+  const trimmed = String(raw || '').trim();
+  if (!trimmed) return { ok: false, reason: 'empty', domain: '' };
+  if (/\s/.test(trimmed)) return { ok: false, reason: 'invalid', domain: '' };
+  const domain = normalizeDomain(trimmed);
+  if (!domain) return { ok: false, reason: 'invalid', domain: '' };
+  if (isValidDomain(domain)) return { ok: true, domain };
+  if (!domain.includes('.') && DOMAIN_LABEL_RE.test(domain)) {
+    return { ok: false, reason: 'no_dot', domain };
+  }
+  return { ok: false, reason: 'invalid', domain };
+}
+
+/** 关键词归一化：去首尾空白、兼容全半角、统一小写、折叠连续空白 */
+export function normalizeKeyword(input) {
+  return String(input || '').trim().normalize('NFKC').toLowerCase().replace(/\s+/g, ' ');
 }
 
 /** host 是否命中 domains（含子域名） */
@@ -153,7 +192,7 @@ export function normalizeSteamMode(settings = {}) {
 }
 
 const SEARCH_ENGINES = [
-  { re: /(^|\.)google\.[a-z.]+$/, params: ['q', 'oq'] },
+  { re: /^(www\.|m\.)?google\.[a-z.]+$/, params: ['q', 'oq'], path: /^\/(?:search(?:\/|$)|webhp(?:\/|$)|$)/ },
   { re: /(^|\.)bing\.com$/, params: ['q'] },
   { re: /(^|\.)baidu\.com$/, params: ['wd', 'word', 'kw', 'query'] },
   { re: /(^|\.)sogou\.com$/, params: ['query', 'keyword'] },
@@ -250,13 +289,14 @@ export function classifyUrl(url, { domains = [], keywords = [], steamMode = 'off
 /** 当前生效的名单 = (默认 + 自定义) − 已移除，以及独立 Steam 封锁状态 */
 export function effectiveLists(settings = {}) {
   const removedD = new Set(settings.removedDomains || []);
-  const removedK = new Set(settings.removedKeywords || []);
+  const removedK = new Set((settings.removedKeywords || []).map(normalizeKeyword).filter(Boolean));
   const steamMode = normalizeSteamMode(settings);
   const blockSteam = steamMode !== 'off';
   const baseDomains = [...new Set([...ALL_DEFAULT_DOMAINS, ...(settings.customDomains || [])])]
     .filter((d) => !removedD.has(d));
   const domains = steamMode === 'full' ? [...new Set([...baseDomains, ...STEAM_DOMAINS])] : baseDomains;
-  const keywords = [...new Set([...DEFAULT_KEYWORDS, ...(settings.customKeywords || [])])]
+  const customK = (settings.customKeywords || []).map(normalizeKeyword).filter(Boolean);
+  const keywords = [...new Set([...DEFAULT_KEYWORDS, ...customK])]
     .filter((k) => !removedK.has(k));
   return { domains, keywords, steamMode, blockSteam };
 }
