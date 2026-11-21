@@ -53,12 +53,14 @@ export function solve24(nums, target = 24) {
 export function isSolvable(nums) { return solve24(nums).solutions.length > 0; }
 
 /**
- * 生成若干组有解的 24 点。level 越高，数字范围越大、越偏向"难题"（解法少或需要分数）。
+ * 生成若干组有解的 24 点。1–5 级：题数 3→4→4→5→5，3 级起解锁分数题，4–5 级逐步偏向难题。
  */
-export function generate24({ level = 2, rounds, seed, exclude } = {}) {
+export function generate24({ level = 1, rounds, seed, exclude } = {}) {
   const rng = makeRng(seed);
-  const count = rounds ?? (3 + (level >= 2.5 ? 1 : 0) + (level >= 4 ? 1 : 0));
-  const maxNum = level < 1.5 ? 10 : 13;
+  const lv = Math.max(1, Math.min(5, Math.round(level)));
+  const count = rounds ?? (lv === 1 ? 3 : lv <= 3 ? 4 : 5);
+  const maxNum = 13;
+  const hardBias = lv >= 5 ? 0.85 : lv >= 4 ? 0.6 : 0;
   const out = [];
   const seen = new Set(exclude || []);
   let guard = 0;
@@ -70,10 +72,8 @@ export function generate24({ level = 2, rounds, seed, exclude } = {}) {
     if (!solutions.length) continue;
     // 难度：解法越少越难
     const hard = needsFraction || solutions.length <= 4;
-    const easy = solutions.length >= 20 && !needsFraction;
-    if (level < 1.5 && !easy && rng.next() < 0.7) continue;
-    if (level >= 3.5 && !hard && rng.next() < 0.6) continue;
-    if (level < 3 && needsFraction) continue; // 分数题只在高难度出现
+    if (hardBias > 0 && !hard && rng.next() < hardBias) continue;
+    if (lv < 3 && needsFraction) continue; // 分数题从 3 级开始出现
     seen.add(key);
     out.push({ nums, solutionCount: solutions.length, needsFraction, example: solutions[0] });
   }

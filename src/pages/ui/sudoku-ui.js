@@ -5,13 +5,11 @@ import { generateSudoku, conflicts, SIZE } from '../../puzzles/sudoku.js';
 export const getTitle = () => t('6×6 数独', '6×6 Sudoku');
 export const title = '6×6 数独';
 export const getRule = () => t(
-  '每行、每列、每个 2×3 粗线宫内，数字 1–6 各出现一次',
+  '每行、每列、每个 2×3 宫内，填入数字 1–6 不重复',
   'Fill every row, column, and 2×3 box with numbers 1–6 without repeats',
 );
 export const getKeys = () => [
-  [t('点击空白格', 'Click Cell'), t('输入数字 1–6', 'Type 1–6')],
-  [t('方向键', 'Arrow Keys'), t('切换相邻格子', 'Move focus')],
-  ['Backspace', t('清除当前格', 'Clear cell')],
+  [t('操作', 'Input'), t('点击空白格即可输入数字', 'Click any empty cell to type a number')],
 ];
 
 export function mount(root, params, onDone) {

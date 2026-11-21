@@ -3,7 +3,7 @@ import * as sudoku from './ui/sudoku-ui.js';
 import * as nonogram from './ui/nonogram-ui.js';
 import * as arithmetic from './ui/arithmetic-ui.js';
 import * as twentyfour from './ui/twentyfour-ui.js';
-import { computeDifficulty, paramsFor } from '../lib/difficulty.js';
+import { computeDifficulty, paramsFor, bonusLevelFor, UNLOCK_MIN_LEVEL } from '../lib/difficulty.js';
 import { isSteamDomain, isSteamDownloadUrl } from '../lib/blocklist.js';
 import { getLogs, addLog, updateLog, applyRemovalNow, getSettings, markGateTabActive, clearGateTabActive } from '../lib/storage.js';
 import { makeRng } from '../puzzles/rng.js';
@@ -11,6 +11,8 @@ import { urgePhaseLabel, urgeSvg } from '../lib/urge.js';
 import { t, isEn, toggleLang, onLangChange } from '../lib/i18n.js';
 
 const TYPES = { sudoku, nonogram, arithmetic, twentyfour };
+const BONUS_CHANCE = 0.7;
+const RESET_TOAST_MS = 7000;
 const $ = (id) => document.getElementById(id);
 
 const params = new URLSearchParams(location.search);
@@ -28,33 +30,38 @@ let currentMatch = '';
 let isSteamDl = false;
 let level = 1;
 let order = [];
+let bonusType = null;
+let hasBonus = false;
+let inBonus = false;
 let step = 0;
 let destroy = () => {};
 let finished = false;
 let initialized = false;
 let currentTabId = null;
-let lastResetNotice = false;
+let resetToastPending = false;
+let resetToastVisible = false;
+let resetToastTimer = null;
+let resetToastFadeTimer = null;
 
 function renderHeaderSub() {
+  $('headline').textContent = t('🚧 色情减速带', '🚧 JAV Speed Bump');
   if (mode === 'unlock') {
-    $('headline').textContent = t('🚧 解锁前需完成三组挑战', '🚧 Complete 3 Stages to Unlock');
     if (!pendingItem) return;
     if (pendingItem.type === 'steam') {
       $('sub').textContent = t(
-        '完成后将立即关闭「Steam 封锁」 · 也可直接关闭本页等待 24 小时自动生效',
-        'Finish to disable Steam protection immediately, or wait for the 24h cooldown',
+        '🔓 正在关闭 Steam 封锁 · 关闭后等待 24 小时自动生效',
+        '🔓 Disabling Steam Protection · Or wait for the 24h cooldown',
       );
     } else {
       const typeName = pendingItem.type === 'domain' ? t('网站', 'site') : t('关键词', 'keyword');
       $('sub').textContent = t(
-        `完成后将立即移除${typeName}「${pendingItem.value}」 · 也可直接关闭本页等待 24 小时自动生效`,
-        `Finish to remove ${typeName} "${pendingItem.value}" immediately, or wait for the 24h cooldown`,
+        `🔓 正在解除屏蔽 · ${pendingItem.value} · 关闭后等待 24 小时自动生效`,
+        `🔓 Unlocking ${typeName} "${pendingItem.value}" · Or wait for the 24h cooldown`,
       );
     }
     return;
   }
 
-  $('headline').textContent = t('🚧 色情减速带', '🚧 JAV Speed Bump');
   if (currentKind === 'steam') {
     if (isSteamDl || currentMatch === 'Steam Client Download') {
       $('sub').textContent = t(
@@ -82,50 +89,127 @@ function renderHeaderSub() {
 
 function applyStaticI18n() {
   document.title = t('色情减速带 · JAV Speed Bump', 'JAV Speed Bump');
-  $('timerLabel').textContent = t('已专注', 'Focused');
   $('langBtn').textContent = isEn() ? '中文' : 'EN';
   $('urgeTitle').textContent = t('冲动消退曲线', 'Urge Wave Curve');
   $('urgeStart').textContent = t('0 分钟', '0 min');
-  $('urgePeak').textContent = t('浪峰 (7 分钟)', 'Peak (7m)');
+  $('urgePeak').textContent = t('浪峰', 'Peak');
   $('urgeEnd').textContent = t('15 分钟', '15 min');
 
   const rules = [
-    ['🧠', t('唤醒前额叶理性', 'Engage Prefrontal Cortex'), t('连续完成三组逻辑推理题，用算力接管当前冲动', 'Complete 3 logic puzzles in a row to cool down the urge')],
-    ['🔄', t('切屏或最小化即重置', 'Reset on Tab Switch'), t('离开本页会自动更换新题组，计时不中断', 'Leaving or minimizing this tab resets the current puzzles while timer continues')],
-    ['🛡️', t('随时可主动离开', 'Close Anytime to Win'), t('直接关闭当前标签页，同样计入一次「战胜冲动」', 'Closing this tab right now also counts as overcoming an urge')],
+    ['🧠', t('专注逻辑解题', 'Focus on puzzles'), t('让冲动自然回落', 'to let the urge fade')],
+    ['🔄', t('切屏或最小化', 'Switching or minimizing'), t('将自动重置题组', 'resets the puzzles')],
+    ['🛡️', t('随时关闭本页', 'Closing this tab'), t('同样算战胜冲动', 'still counts as a win')],
   ];
+  const sep = isEn() ? ' ' : '';
   $('rulesCard').replaceChildren(
     h('div', { class: 'rules-title' }, t('关卡机制', 'Gate Rules')),
-    ...rules.map(([ico, title, desc]) =>
+    ...rules.map(([ico, p1, p2]) =>
       h('div', { class: 'rule-item' },
         h('span', { class: 'rule-ico' }, ico),
-        h('div', {}, h('b', {}, title), h('span', {}, desc)))),
+        h('span', { class: 'rule-text' },
+          h('span', { class: 'rule-p1' }, p1),
+          sep,
+          h('span', { class: 'rule-p2' }, p2)))),
   );
   renderHeaderSub();
-  if (lastResetNotice) {
-    $('notice').replaceChildren(h('div', { class: 'notice' }, t(
-      '由于刚才离开页面，系统自动更换了题目，且计时并未暂停',
-      'Puzzles were reset because you left the page (timer kept running)',
-    )));
-  }
+  renderNotice();
+  if (resetToastVisible) renderResetToastEl();
 }
 
-function pickTypes() {
-  const rng = makeRng();
-  return rng.shuffle(Object.keys(TYPES)).slice(0, 3);
+function clearResetToast() {
+  clearTimeout(resetToastTimer);
+  clearTimeout(resetToastFadeTimer);
+  resetToastTimer = null;
+  resetToastFadeTimer = null;
+  resetToastPending = false;
+  resetToastVisible = false;
+  $('toast').replaceChildren();
 }
+
+function hideResetToast() {
+  clearTimeout(resetToastTimer);
+  resetToastTimer = null;
+  const el = $('toast').firstElementChild;
+  if (!el) {
+    resetToastVisible = false;
+    return;
+  }
+  el.classList.add('leaving');
+  clearTimeout(resetToastFadeTimer);
+  resetToastFadeTimer = setTimeout(() => {
+    resetToastVisible = false;
+    $('toast').replaceChildren();
+  }, 260);
+}
+
+function renderResetToastEl() {
+  const el = h('div', { class: 'reset-toast', onclick: () => hideResetToast() },
+    h('span', { class: 'toast-ico' }, '🔄'),
+    h('span', {}, t('由于刚才离开页面，已自动更换新题组', 'Puzzles were reset because you left the page')));
+  $('toast').replaceChildren(el);
+}
+
+function showResetToast() {
+  clearTimeout(resetToastTimer);
+  clearTimeout(resetToastFadeTimer);
+  resetToastPending = false;
+  resetToastVisible = true;
+  renderResetToastEl();
+  resetToastTimer = setTimeout(hideResetToast, RESET_TOAST_MS);
+}
+
+function renderNotice() {
+  if (inBonus) {
+    $('notice').replaceChildren(
+      h('div', { class: 'bonus-banner' },
+        h('div', { class: 'bonus-top' },
+          h('div', { class: 'bonus-head' },
+            h('span', { class: 'bonus-fire' }, '🔥'),
+            h('b', {}, t('太强了，已完成 99%！就差最后一道「终局收官题」', '99% Done! Just One Final Push to Lock In Your Win'))),
+          h('span', { class: 'bonus-pct' }, '99%')),
+        h('div', { class: 'bonus-bar' }, h('div', { class: 'bonus-bar-fill' })),
+        h('div', { class: 'bonus-desc' }, t(
+          '最难的三关已经全部拿下，这道压轴题特意放缓了难度——再坚持一下，把最后一丝冲动彻底清零！',
+          'You already conquered the toughest three stages. This finale is stepped down—finish this last step to drain the final trace of urge!',
+        ))),
+    );
+    return;
+  }
+  $('notice').replaceChildren();
+}
+
+function pickSession() {
+  const rng = makeRng();
+  const all = rng.shuffle(Object.keys(TYPES));
+  return {
+    main: all.slice(0, 3),
+    bonus: all[3],
+    triggerBonus: rng.next() < BONUS_CHANCE,
+  };
+}
+
+const narrowQuery = window.matchMedia('(max-width: 1000px)');
 
 function renderUrge(ms) {
   const min = ms / 60000;
   $('urgePhase').textContent = urgePhaseLabel(min);
-  $('urgeSvg').innerHTML = urgeSvg(min, Date.now());
+  const box = $('urgeSvg');
+  const W = Math.max(220, Math.round(box.clientWidth || (narrowQuery.matches ? 420 : 276)));
+  const H = narrowQuery.matches ? 78 : 118;
+  box.innerHTML = urgeSvg(min, Date.now(), W, H);
 }
 
 function renderSteps() {
   $('steps').replaceChildren(...order.map((k, i) => {
     const label = TYPES[k].getTitle ? TYPES[k].getTitle() : TYPES[k].title;
-    return h('div', { class: 'step' + (i < step ? ' done' : i === step ? ' active' : '') },
-      t(`${i < step ? '✓ ' : ''}第 ${i + 1} 组 · ${label}`, `${i < step ? '✓ ' : ''}Stage ${i + 1} · ${label}`));
+    const isBonusStep = i === 3;
+    const cls = 'step'
+      + (i < step ? ' done' : i === step ? ' active' : '')
+      + (isBonusStep ? ' bonus' : '');
+    const text = isBonusStep
+      ? t(`${i < step ? '✓ ' : '★ '}最后一道 · ${label}`, `${i < step ? '✓ ' : '★ '}Final · ${label}`)
+      : t(`${i < step ? '✓ ' : ''}第 ${i + 1} 组 · ${label}`, `${i < step ? '✓ ' : ''}Stage ${i + 1} · ${label}`);
+    return h('div', { class: cls }, text);
   }));
 }
 
@@ -143,21 +227,38 @@ function renderIntro(mod) {
 function refreshCurrentStepChrome() {
   if (!order.length || step >= order.length) return;
   const mod = TYPES[order[step]];
+  const activeLevel = inBonus ? bonusLevelFor(level) : level;
   $('ptitle').textContent = mod.getTitle ? mod.getTitle() : mod.title;
   renderIntro(mod);
-  $('plevel').textContent = t(`难度 ${level.toFixed(1)} / 5`, `Level ${level.toFixed(1)} / 5`);
+  const levelEl = $('plevel');
+  levelEl.className = inBonus ? 'tag amber bonus-tag' : 'tag amber';
+  levelEl.textContent = inBonus
+    ? t(`★ 终局收官 · 难度 ${activeLevel} / 5`, `★ Final Step · Level ${activeLevel} / 5`)
+    : t(`难度 ${activeLevel} / 5`, `Level ${activeLevel} / 5`);
+  const panel = document.querySelector('.puzzle-panel');
+  if (panel) panel.classList.toggle('bonus-mode', inBonus);
   renderSteps();
 }
 
 function mountStep() {
   destroy();
   const mod = TYPES[order[step]];
+  const activeLevel = inBonus ? bonusLevelFor(level) : level;
   refreshCurrentStepChrome();
   const stage = $('stage');
   stage.replaceChildren();
-  const p = paramsFor(level)[order[step]];
+  const p = paramsFor(activeLevel)[order[step]];
   destroy = mod.mount(stage, p, () => {
     step++;
+    if (step === 3 && hasBonus && !inBonus && bonusType) {
+      inBonus = true;
+      clearResetToast();
+      order = [...order, bonusType];
+      renderNotice();
+      if (logEntry) updateLog(logEntry.id, { puzzles: order, bonus: true }).catch(console.error);
+      mountStep();
+      return;
+    }
     renderSteps();
     if (step >= order.length) done();
     else mountStep();
@@ -166,21 +267,25 @@ function mountStep() {
 
 function restart(isLeaveReset = false) {
   if (finished) return;
-  order = pickTypes();
+  const session = pickSession();
+  order = session.main;
+  bonusType = session.bonus;
+  hasBonus = session.triggerBonus;
+  inBonus = false;
   step = 0;
-  lastResetNotice = isLeaveReset;
+  clearResetToast();
   if (isLeaveReset) {
-    $('notice').replaceChildren(h('div', { class: 'notice' }, t(
-      '由于刚才离开页面，系统自动更换了题目，且计时并未暂停',
-      'Puzzles were reset because you left the page (timer kept running)',
-    )));
+    if (document.visibilityState === 'visible') showResetToast();
+    else resetToastPending = true;
   }
+  renderNotice();
   mountStep();
-  if (logEntry) updateLog(logEntry.id, { puzzles: order }).catch(console.error);
+  if (logEntry) updateLog(logEntry.id, { puzzles: order, bonus: false }).catch(console.error);
 }
 
 async function done() {
   finished = true;
+  clearResetToast();
   destroy();
   const puzzleMs = Date.now() - startTs;
   if (mode === 'unlock') {
@@ -206,15 +311,30 @@ function sessionKey() { return 'jsb-log:' + target; }
 function unlockSessionKey(pid) { return 'jsb-unlock:' + pid; }
 
 function tick() {
-  const ms = Date.now() - startTs;
-  const m = Math.floor(ms / 60000), s = Math.floor((ms % 60000) / 1000);
-  $('timer').textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-  renderUrge(ms);
+  renderUrge(Date.now() - startTs);
 }
 
+if (typeof ResizeObserver !== 'undefined') {
+  let lastW = 0;
+  new ResizeObserver(() => {
+    if (!initialized) return;
+    const w = Math.round($('urgeSvg').clientWidth);
+    if (w && w !== lastW) {
+      lastW = w;
+      renderUrge(Date.now() - startTs);
+    }
+  }).observe($('urgeSvg'));
+}
+narrowQuery.addEventListener('change', () => {
+  if (initialized) renderUrge(Date.now() - startTs);
+});
+
 document.addEventListener('visibilitychange', () => {
-  if (initialized && document.visibilityState === 'hidden' && !finished) {
+  if (!initialized || finished) return;
+  if (document.visibilityState === 'hidden') {
     restart(true);
+  } else if (document.visibilityState === 'visible' && resetToastPending) {
+    showResetToast();
   }
 });
 
@@ -237,7 +357,7 @@ async function init() {
     const savedTs = Number(sessionStorage.getItem(unlockSessionKey(pid)));
     if (savedTs > 0) startTs = savedTs;
     else sessionStorage.setItem(unlockSessionKey(pid), String(startTs));
-    level = Math.max(level, 2.5);
+    level = Math.max(level, UNLOCK_MIN_LEVEL);
   } else {
     const rawKind = params.get('kind');
     isSteamDl = isSteamDownloadUrl(target);

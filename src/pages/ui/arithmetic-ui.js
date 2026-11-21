@@ -10,7 +10,6 @@ export const getRule = () => t(
 );
 export const getKeys = () => [
   [t('答错惩罚', 'Mistake Rule'), t('进度清零并更换整组新题', 'Resets progress with a new set')],
-  ['Enter', t('快速提交答案', 'Submit answer')],
 ];
 
 export function mount(root, params, onDone) {

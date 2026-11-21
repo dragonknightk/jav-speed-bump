@@ -9,9 +9,7 @@ export const getRule = () => t(
   'Use all 4 numbers exactly once with + − × ÷ and parentheses to make 24',
 );
 export const getKeys = () => [
-  [t('键盘输入', 'Keyboard'), t('支持直接键入算式（可用 * / 代替乘除）', 'Type expression directly (* and / allowed)')],
-  [t('鼠标点击', 'Mouse'), t('点击下方数字牌与运算符按钮', 'Click number cards and operator buttons')],
-  ['Enter', t('提交算式', 'Submit expression')],
+  [t('键盘输入', 'Keyboard'), t('支持直接用键盘输入算式', 'Type expressions directly from keyboard')],
 ];
 
 function format24Error(rawErr) {

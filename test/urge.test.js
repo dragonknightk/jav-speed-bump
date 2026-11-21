@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { urgeLevel, urgePhase, urgeSvg, PEAK_MIN, WAVE_MIN } from '../src/lib/urge.js';
+import { urgeLevel, urgePhase, urgeSvg, formatUrgeTime, PEAK_MIN, WAVE_MIN } from '../src/lib/urge.js';
 
 test('曲线在高峰最高，两头接近 0', () => {
   assert.equal(urgeLevel(PEAK_MIN), 1);
@@ -25,11 +25,15 @@ test('流光和脉冲按时钟接上相位', () => {
   assert.ok(svg.includes('class="urge-dot" style="animation-delay:-100ms"'));
 });
 
-test('SVG 不引用外部资源', () => {
-  for (const m of [0, 6, 7, 12, 30]) {
+test('SVG 不引用外部资源且时间标签随圆点渲染', () => {
+  assert.equal(formatUrgeTime(0), '00:00');
+  assert.equal(formatUrgeTime(4 + 14 / 60), '04:14');
+  assert.equal(formatUrgeTime(18.5), '18:30');
+  for (const m of [0, 4 + 14 / 60, 6, 7, 12, 30]) {
     const svg = urgeSvg(m, Date.now());
     assert.ok(svg.startsWith('<svg'));
     assert.ok(!/https?:|href=/.test(svg.replace('http://www.w3.org', '')));
     assert.ok(!svg.includes('NaN'));
+    assert.ok(svg.includes(formatUrgeTime(m)));
   }
 });

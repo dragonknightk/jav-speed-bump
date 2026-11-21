@@ -9,6 +9,7 @@
 </head>
 <body>
 <div class="stripe"></div>
+<div class="toast-wrap" id="toast" aria-live="polite"></div>
 <div class="wrap wide">
   <header class="top-bar">
     <div class="brand-group">
@@ -16,10 +17,6 @@
       <div class="target-banner" id="sub"></div>
     </div>
     <div class="row">
-      <div class="timer-box">
-        <span class="timer-label" id="timerLabel">已专注</span>
-        <span class="timer" id="timer">00:00</span>
-      </div>
       <button class="small" id="langBtn" title="切换语言 / Switch Language">EN</button>
     </div>
   </header>
@@ -47,7 +44,7 @@
         <div id="urgeSvg"></div>
         <div class="urge-lb">
           <span id="urgeStart">0 分钟</span>
-          <span class="pk" id="urgePeak">浪峰 (7 分钟)</span>
+          <span class="pk" id="urgePeak">浪峰</span>
           <span id="urgeEnd">15 分钟</span>
         </div>
       </div>

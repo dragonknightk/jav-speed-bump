@@ -5,13 +5,12 @@ import { generateNonogram, matchesClues, lineClue } from '../../puzzles/nonogram
 export const getTitle = () => t('数织', 'Nonogram');
 export const title = '数织';
 export const getRule = () => t(
-  '行列数字代表连续涂黑的格数，多组数字之间至少间隔一格空白',
+  '行列数字代表连续涂黑的格数，多组数字之间至少空一格',
   'Numbers show lengths of consecutive filled blocks in each row/column (at least 1 empty cell between blocks)',
 );
 export const getKeys = () => [
-  [t('左键点击', 'Left Click'), t('涂黑格子', 'Fill cell')],
-  [t('右键 / Shift+左键', 'Right / Shift+Click'), t('标记空白 ×', 'Mark ×')],
-  [t('按住拖动', 'Drag'), t('连续涂画整排', 'Paint continuously')],
+  [t('左键', 'Left Click'), t('涂黑格子', 'Fill cell')],
+  [t('右键 / Shift+左键', 'Right / Shift+Click'), t('标记空白 ×', 'Mark empty ×')],
 ];
 
 export function mount(root, params, onDone) {
@@ -22,7 +21,7 @@ export function mount(root, params, onDone) {
   let painting = null;
   let finished = false;
   let doneTimer = null;
-  const table = h('table', { class: 'nono' });
+  const table = h('table', { class: 'nono' + (n >= 12 ? ' size-12' : n === 11 ? ' size-11' : '') });
   const head = h('tr', {}, h('td'));
   const colEls = puz.cols.map((cl) => {
     const td = h('td', { class: 'cc' }, ...cl.flatMap((v, i) => (i ? [h('br'), String(v)] : [String(v)])));
@@ -91,7 +90,7 @@ export function mount(root, params, onDone) {
     if (finished) msg.textContent = t('✓ 解题完成', '✓ Completed');
   });
 
-  root.append(h('div', { class: 'puzzle' }, table, msg, clear));
+  root.append(h('div', { class: 'puzzle' }, h('div', { class: 'nono-wrap' }, table), msg, clear));
   return () => {
     offLang();
     clearTimeout(doneTimer);

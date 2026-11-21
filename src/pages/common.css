@@ -169,6 +169,8 @@ kbd {
   border: 1px solid rgba(245, 179, 1, 0.3);
   border-radius: 5px;
   line-height: 1.5;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .modal-bg {
@@ -190,4 +192,10 @@ kbd {
   max-width: 480px;
   width: 92%;
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+}
+
+@media (max-width: 680px) {
+  .wrap { padding: 18px 14px 48px; }
+  h1 { font-size: 20px; }
+  .panel { padding: 16px; }
 }

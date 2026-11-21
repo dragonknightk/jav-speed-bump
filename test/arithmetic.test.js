@@ -9,7 +9,7 @@ function evalText(text) {
 }
 
 test('每组 10 题，答案正确且都是整数', () => {
-  for (const level of [0, 1, 2, 3, 4, 5]) {
+  for (const level of [1, 2, 3, 4, 5]) {
     for (let seed = 1; seed <= 40; seed++) {
       const set = generateArithmetic({ level, seed });
       assert.equal(set.length, COUNT);
@@ -42,29 +42,16 @@ test('减法有借位、除法整除、范围合理', () => {
   }
 });
 
-test('初始难度以一位数乘法和两位数加减为主', () => {
-  for (let seed = 1; seed <= 40; seed++) {
-    const set = generateArithmetic({ level: 1, seed });
-    assert.ok(set.filter((p) => p.kind === 'mul0').length >= 4);
-    for (const p of set) {
-      assert.ok(['mul0', 'add1', 'sub1'].includes(p.kind));
-      if (p.kind === 'mul0') {
-        const [a, b] = p.text.split(' × ').map(Number);
-        assert.ok(a >= 2 && a <= 9 && b >= 2 && b <= 9);
-      }
-      if (p.kind === 'add1' || p.kind === 'sub1') {
-        const [a, b] = p.text.split(/ [+−] /).map(Number);
-        assert.ok(a >= 10 && a <= 99 && b >= 10 && b <= 99);
-      }
-    }
-  }
-});
+test('1–5 级从成人起步档平滑递增至高难混合档', () => {
+  const lv1 = generateArithmetic({ level: 1, seed: 1 });
+  assert.ok(lv1.some((p) => p.kind === 'mul1') && lv1.some((p) => p.kind === 'mix'));
+  assert.ok(!lv1.some((p) => p.kind === 'mul2'));
 
-test('高难度包含更难的题型', () => {
-  const kinds = new Set(generateArithmetic({ level: 5, seed: 1 }).map((p) => p.kind));
-  assert.ok(kinds.has('mul2'));
-  const easy = new Set(generateArithmetic({ level: 0, seed: 1 }).map((p) => p.kind));
-  assert.ok(!easy.has('mul2') && !easy.has('mix'));
+  const mul2Counts = [1, 2, 3, 4, 5].map((lv) => generateArithmetic({ level: lv, seed: 1 }).filter((p) => p.kind === 'mul2').length);
+  assert.deepEqual(mul2Counts, [0, 1, 2, 3, 4]);
+
+  const mixCounts = [1, 2, 3, 4, 5].map((lv) => generateArithmetic({ level: lv, seed: 1 }).filter((p) => p.kind === 'mix').length);
+  assert.deepEqual(mixCounts, [1, 2, 2, 2, 3]);
 });
 
 test('checkAnswer', () => {

@@ -51,7 +51,7 @@ People often treat quitting an addiction as an all-or-nothing war—as if making
 
 Just as a heavy smoker rarely drops from 20 cigarettes a day to zero overnight—but can step down from 20 to 15, then to 10, and eventually quit—breaking a porn habit follows the same curve. Maybe your first streak lasts 4 days before you slip. Then your next streak lasts 6 days, then 10 days, then three weeks.
 
-Along that curve, you don't need superhuman willpower. `JAV Speed Bump` is designed around four proven principles from behavioral psychology and neuroscience:
+Along that curve, you don't need superhuman willpower. `JAV Speed Bump` is designed around five proven principles from behavioral psychology and neuroscience:
 
 ### 1. Friction Cost: Put Sand in the Gears of Autopilot Habits
 Behavioral economics and habit research by psychologist Wendy Wood show that over 40% of daily habits are **automatic responses** triggered by context (boredom, stress, fatigue, or waiting).
@@ -68,6 +68,10 @@ The live **Urge Wave Curve** on the right side of the puzzle gate shows you visu
 ### 4. Avoiding the Abstinence Violation Effect: Every Pause Counts as a Win
 Most streak-tracking apps punish a single slip by resetting your counter to zero—triggering shame and a full relapse (the **Abstinence Violation Effect**).
 `JAV Speed Bump` never counts "failures." Its headline metric is **Urges Overcome**. Every time the speed bump catches you—even if you close the tab halfway through a puzzle and walk away—it counts as a victory.
+
+### 5. Goal-Gradient Effect: One Final Push to Drain the Last Drop of Urge
+Psychologist Clark Hull's **Goal-Gradient Effect** shows that **the closer people get to a finish line, the harder they push to complete it**—just like finishing 50 sit-ups completely exhausted, only to find out there is one single rep left.
+Built into `JAV Speed Bump` is a surprise finale that is never shown up front: right when you finish all three stages, a gleaming **Final Bonus Stage** may slide in (using the 4th puzzle type not yet seen in this session, stepped down in difficulty so it feels totally within reach). Instead of overwhelming you, that "99% done—just one more" momentum carries you through and drains whatever tiny trace of urge might still linger.
 
 ---
 

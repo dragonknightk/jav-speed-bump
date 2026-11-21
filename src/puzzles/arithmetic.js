@@ -5,22 +5,6 @@ export const COUNT = 10;
 
 function make(rng, kind) {
   switch (kind) {
-    case 'mul0': { // 一位数 × 一位数，如 7×8
-      const a = rng.int(2, 9), b = rng.int(2, 9);
-      return { text: `${a} × ${b}`, answer: a * b };
-    }
-    case 'add1': { // 两位数加法，有进位
-      for (;;) {
-        const a = rng.int(12, 79), b = rng.int(12, 79);
-        if ((a % 10) + (b % 10) >= 10) return { text: `${a} + ${b}`, answer: a + b };
-      }
-    }
-    case 'sub1': { // 两位数减法，有借位
-      for (;;) {
-        const a = rng.int(31, 99), b = rng.int(12, a - 11);
-        if (a % 10 < b % 10) return { text: `${a} − ${b}`, answer: a - b };
-      }
-    }
     case 'mul1': { // 两位数 × 一位数，如 47×8
       const a = rng.int(13, 99), b = rng.int(3, 9);
       return { text: `${a} × ${b}`, answer: a * b };
@@ -60,13 +44,15 @@ function make(rng, kind) {
 }
 
 export function kindsFor(level) {
-  if (level < 1.5) return ['mul0', 'mul0', 'mul0', 'add1', 'sub1', 'mul0', 'add1', 'sub1', 'add1', 'sub1'];
-  if (level < 3) return ['mul1', 'sub', 'add', 'div', 'mul1', 'sub', 'mul3', 'div', 'sub', 'mix'];
-  if (level < 4) return ['mul2', 'sub', 'div', 'mul3', 'sub', 'mix', 'mul1', 'div', 'mul2', 'mix'];
-  return ['mul2', 'mul2', 'sub', 'div', 'mul3', 'mix', 'mix', 'div', 'mul2', 'sub'];
+  const lv = Math.max(1, Math.min(5, Math.round(level)));
+  if (lv === 1) return ['mul1', 'sub', 'add', 'div', 'mul1', 'sub', 'mul3', 'div', 'sub', 'mix'];
+  if (lv === 2) return ['mul2', 'mul1', 'sub', 'add', 'div', 'mul3', 'div', 'sub', 'mix', 'mix'];
+  if (lv === 3) return ['mul2', 'mul2', 'sub', 'div', 'mul3', 'mix', 'mix', 'mul1', 'div', 'sub'];
+  if (lv === 4) return ['mul2', 'mul2', 'mul2', 'sub', 'div', 'mul3', 'mix', 'mix', 'div', 'sub'];
+  return ['mul2', 'mul2', 'mul2', 'mul2', 'mul3', 'div', 'div', 'mix', 'mix', 'mix'];
 }
 
-export function generateArithmetic({ level = 2, seed } = {}) {
+export function generateArithmetic({ level = 1, seed } = {}) {
   const rng = makeRng(seed);
   return rng.shuffle(kindsFor(level)).map((k) => ({ kind: k, ...make(rng, k) }));
 }

@@ -21,14 +21,15 @@ test('求解器给出的每个解法都能被校验器接受', () => {
   }
 });
 
-test('生成的题目全部有解，且示例答案正确', () => {
-  for (const level of [0, 1, 2, 3, 4, 5]) {
+test('生成的题目全部有解，且题数与分数规则符合 1–5 级阶梯', () => {
+  const expectedRounds = { 1: 3, 2: 4, 3: 4, 4: 5, 5: 5 };
+  for (const level of [1, 2, 3, 4, 5]) {
     for (let seed = 1; seed <= 15; seed++) {
       const sets = generate24({ level, seed });
-      assert.ok(sets.length >= 3);
+      assert.equal(sets.length, expectedRounds[level]);
       for (const s of sets) {
         assert.equal(s.nums.length, 4);
-        assert.ok(s.nums.every((n) => n >= 1 && n <= (level < 1.5 ? 10 : 13)));
+        assert.ok(s.nums.every((n) => n >= 1 && n <= 13));
         assert.ok(isSolvable(s.nums));
         assert.ok(check24(s.nums, s.example).ok);
         if (level < 3) assert.equal(s.needsFraction, false);
