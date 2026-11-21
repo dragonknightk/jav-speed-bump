@@ -1,12 +1,14 @@
 // 后台 Service Worker：维护 declarativeNetRequest 规则 + 兜底拦截（关键词搜索、Steam 下载/搜索、SPA 跳转）
-import { classifyUrl, matchDomain, STEAM_DOMAINS } from './lib/blocklist.js';
-import { getLists, applyDueRemovals } from './lib/storage.js';
+import { classifyUrl, matchDomain, isSteamDownloadUrl, isDnrSafeDomain, STEAM_DOMAINS } from './lib/blocklist.js';
+import { getLists, applyDueRemovals, clearGateTabActive } from './lib/storage.js';
 
 const RULE_ID_DOMAINS = 1;
 const RULE_ID_STEAM_ABOUT = 2;
 const RULE_ID_STEAM_INSTALLER = 3;
+const ALL_RULE_IDS = [RULE_ID_DOMAINS, RULE_ID_STEAM_ABOUT, RULE_ID_STEAM_INSTALLER];
 const GATE = 'src/pages/gate.html';
 let lists = null;
+let syncQueue = Promise.resolve();
 const lastRedirect = new Map(); // tabId -> { url, ts }，防止同一地址被多个事件重复跳转
 
 async function loadLists() {
@@ -14,20 +16,28 @@ async function loadLists() {
   return lists;
 }
 
-async function syncRules() {
+function syncRules() {
+  const p = syncQueue.then(runSyncRules, runSyncRules);
+  syncQueue = p.catch(() => {});
+  return p;
+}
+
+async function runSyncRules() {
   const { domains, steamMode } = await loadLists();
+  const safeDomains = domains.filter(isDnrSafeDomain);
   const existing = await chrome.declarativeNetRequest.getDynamicRules();
+  const removeRuleIds = [...new Set([...ALL_RULE_IDS, ...existing.map((r) => r.id)])];
   const redirectTarget = `chrome-extension://${chrome.runtime.id}/${GATE}#\\0`;
   const addRules = [];
 
-  if (domains.length) {
+  if (safeDomains.length) {
     addRules.push({
       id: RULE_ID_DOMAINS,
       priority: 1,
       action: { type: 'redirect', redirect: { regexSubstitution: redirectTarget } },
       condition: {
         regexFilter: '^https?://.*',
-        requestDomains: domains,
+        requestDomains: safeDomains,
         resourceTypes: ['main_frame'],
       },
     });
@@ -41,6 +51,7 @@ async function syncRules() {
         action: { type: 'redirect', redirect: { regexSubstitution: redirectTarget } },
         condition: {
           regexFilter: '^https?://(store\\.)?steampowered\\.com/about([/?#].*|$)',
+          isUrlFilterCaseSensitive: false,
           requestDomains: ['steampowered.com'],
           resourceTypes: ['main_frame'],
         },
@@ -50,7 +61,8 @@ async function syncRules() {
         priority: 2,
         action: { type: 'redirect', redirect: { regexSubstitution: redirectTarget } },
         condition: {
-          regexFilter: '^https?://[^/]+/(.*client/installer/.*|.*(SteamSetup\\.exe|steam\\.dmg|steam_latest\\.deb|steam\\.apk)([?#].*|$))',
+          regexFilter: '^https?://[^/]+/(.*client/installer/.*|.*(steamsetup\\.exe|steam\\.dmg|steam_latest\\.deb|steam\\.apk)([?#].*|$))',
+          isUrlFilterCaseSensitive: false,
           requestDomains: STEAM_DOMAINS,
           resourceTypes: ['main_frame'],
         },
@@ -59,7 +71,7 @@ async function syncRules() {
   }
 
   await chrome.declarativeNetRequest.updateDynamicRules({
-    removeRuleIds: existing.map((r) => r.id),
+    removeRuleIds,
     addRules,
   });
 }
@@ -74,7 +86,10 @@ async function maybeRedirect(tabId, url, { nonDnrOnly = false } = {}) {
   if (!lists) await loadLists();
   const verdict = classifyUrl(url, lists);
   if (!verdict) return;
-  if (nonDnrOnly && matchDomain(verdict.domain, lists.domains)) return; // 域名本身已在 DNR 规则中，交由 DNR 重定向
+  if (nonDnrOnly) {
+    if (matchDomain(verdict.domain, lists.domains)) return; // 域名本身已在 DNR 规则中，交由 DNR 重定向
+    if (lists.steamMode === 'download' && isSteamDownloadUrl(url)) return; // Steam 下载页/安装包已在 DNR 规则中
+  }
   const now = Date.now();
   const prev = lastRedirect.get(tabId);
   if (prev && prev.url === url && now - prev.ts < 1500) return;
@@ -98,7 +113,10 @@ chrome.webNavigation.onReferenceFragmentUpdated.addListener((d) => {
 chrome.tabs.onUpdated.addListener((tabId, info) => {
   if (info.url) maybeRedirect(tabId, info.url);
 });
-chrome.tabs.onRemoved.addListener((tabId) => lastRedirect.delete(tabId));
+chrome.tabs.onRemoved.addListener((tabId) => {
+  lastRedirect.delete(tabId);
+  clearGateTabActive(tabId).catch(() => {});
+});
 
 chrome.storage.onChanged.addListener((changes, areaName) => {
   if (areaName === 'local' && changes.settings) syncRules().catch(console.error);
