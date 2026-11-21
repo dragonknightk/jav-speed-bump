@@ -5,7 +5,7 @@ import * as arithmetic from './ui/arithmetic-ui.js';
 import * as twentyfour from './ui/twentyfour-ui.js';
 import { computeDifficulty, paramsFor } from '../lib/difficulty.js';
 import { isSteamDomain, isSteamDownloadUrl } from '../lib/blocklist.js';
-import { getLogs, addLog, updateLog, applyRemovalNow, getSettings } from '../lib/storage.js';
+import { getLogs, addLog, updateLog, applyRemovalNow, getSettings, markGateTabActive, clearGateTabActive } from '../lib/storage.js';
 import { makeRng } from '../puzzles/rng.js';
 import { urgePhaseLabel, urgeSvg } from '../lib/urge.js';
 import { t, isEn, toggleLang, onLangChange } from '../lib/i18n.js';
@@ -31,6 +31,8 @@ let order = [];
 let step = 0;
 let destroy = () => {};
 let finished = false;
+let initialized = false;
+let currentTabId = null;
 let lastResetNotice = false;
 
 function renderHeaderSub() {
@@ -89,7 +91,7 @@ function applyStaticI18n() {
 
   const rules = [
     ['🧠', t('唤醒前额叶理性', 'Engage Prefrontal Cortex'), t('连续完成三组逻辑推理题，用算力接管当前冲动', 'Complete 3 logic puzzles in a row to cool down the urge')],
-    ['🔄', t('切屏或最小化即重置', 'Reset on Tab Switch'), t('离开本页会自动更换新题组，倒计时不中断', 'Leaving or minimizing this tab resets the current puzzles while timer continues')],
+    ['🔄', t('切屏或最小化即重置', 'Reset on Tab Switch'), t('离开本页会自动更换新题组，计时不中断', 'Leaving or minimizing this tab resets the current puzzles while timer continues')],
     ['🛡️', t('随时可主动离开', 'Close Anytime to Win'), t('直接关闭当前标签页，同样计入一次「战胜冲动」', 'Closing this tab right now also counts as overcoming an urge')],
   ];
   $('rulesCard').replaceChildren(
@@ -102,7 +104,7 @@ function applyStaticI18n() {
   renderHeaderSub();
   if (lastResetNotice) {
     $('notice').replaceChildren(h('div', { class: 'notice' }, t(
-      '由于刚才离开页面，系统自动更换了题目，且倒计时并未暂停',
+      '由于刚才离开页面，系统自动更换了题目，且计时并未暂停',
       'Puzzles were reset because you left the page (timer kept running)',
     )));
   }
@@ -169,11 +171,12 @@ function restart(isLeaveReset = false) {
   lastResetNotice = isLeaveReset;
   if (isLeaveReset) {
     $('notice').replaceChildren(h('div', { class: 'notice' }, t(
-      '由于刚才离开页面，系统自动更换了题目，且倒计时并未暂停',
+      '由于刚才离开页面，系统自动更换了题目，且计时并未暂停',
       'Puzzles were reset because you left the page (timer kept running)',
     )));
   }
   mountStep();
+  if (logEntry) updateLog(logEntry.id, { puzzles: order }).catch(console.error);
 }
 
 async function done() {
@@ -189,6 +192,7 @@ async function done() {
     return;
   }
   if (logEntry) await updateLog(logEntry.id, { completed: true, puzzleMs });
+  await clearGateTabActive(currentTabId).catch(() => {});
   sessionStorage.removeItem(sessionKey());
   const q = new URLSearchParams({
     log: logEntry?.id || '',
@@ -209,7 +213,7 @@ function tick() {
 }
 
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'hidden' && !finished) {
+  if (initialized && document.visibilityState === 'hidden' && !finished) {
     restart(true);
   }
 });
@@ -252,10 +256,13 @@ async function init() {
       sessionStorage.setItem(sessionKey(), logEntry.id);
       startTs = logEntry.ts;
     }
+    const tab = await chrome.tabs.getCurrent().catch(() => null);
+    currentTabId = tab?.id ?? null;
+    if (logEntry) await markGateTabActive(currentTabId, logEntry.id).catch(() => {});
   }
   applyStaticI18n();
+  initialized = true;
   restart(false);
-  if (logEntry) updateLog(logEntry.id, { puzzles: order });
   tick();
   setInterval(tick, 1000);
 }

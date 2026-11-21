@@ -21,6 +21,7 @@ export function mount(root, params, onDone) {
   const cells = [];
   let painting = null;
   let finished = false;
+  let doneTimer = null;
   const table = h('table', { class: 'nono' });
   const head = h('tr', {}, h('td'));
   const colEls = puz.cols.map((cl) => {
@@ -40,12 +41,17 @@ export function mount(root, params, onDone) {
       const cls = ['cell', c % 5 === 4 && c !== n - 1 ? 'b5' : '', r % 5 === 4 && r !== n - 1 ? 'r5' : ''].join(' ');
       const td = h('td', { class: cls });
       td.addEventListener('mousedown', (e) => {
+        if (finished || (e.button !== 0 && e.button !== 2)) return;
         e.preventDefault();
         const mark = e.button === 2 || e.shiftKey ? 2 : 1;
         painting = state[r][c] === mark ? 0 : mark;
         set(r, c, painting);
       });
-      td.addEventListener('mouseenter', () => { if (painting !== null) set(r, c, painting); });
+      td.addEventListener('mouseenter', (e) => {
+        if (painting === null) return;
+        if (e.buttons === 0) { onUp(); return; }
+        set(r, c, painting);
+      });
       td.addEventListener('contextmenu', (e) => e.preventDefault());
       cells[r].push(td);
       tr.append(td);
@@ -54,6 +60,7 @@ export function mount(root, params, onDone) {
   }
   const onUp = () => { if (painting !== null) { painting = null; check(); } };
   window.addEventListener('mouseup', onUp);
+  window.addEventListener('blur', onUp);
 
   function set(r, c, v) {
     if (finished) return;
@@ -69,13 +76,14 @@ export function mount(root, params, onDone) {
     if (finished) return;
     if (matchesClues(state.map((row) => row.map((x) => (x === 1 ? 1 : 0))), puz)) {
       finished = true;
+      clear.disabled = true;
       msg.className = 'msg ok';
       msg.textContent = t('✓ 解题完成', '✓ Completed');
-      setTimeout(onDone, 600);
+      doneTimer = setTimeout(onDone, 600);
     }
   }
   const clear = h('button', {
-    onclick: () => { for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) set(r, c, 0); },
+    onclick: () => { if (finished) return; for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) set(r, c, 0); },
   }, t('清空棋盘重填', 'Clear Board'));
 
   const offLang = onLangChange(() => {
@@ -86,6 +94,8 @@ export function mount(root, params, onDone) {
   root.append(h('div', { class: 'puzzle' }, table, msg, clear));
   return () => {
     offLang();
+    clearTimeout(doneTimer);
     window.removeEventListener('mouseup', onUp);
+    window.removeEventListener('blur', onUp);
   };
 }

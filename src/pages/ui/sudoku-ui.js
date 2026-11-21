@@ -21,18 +21,26 @@ export function mount(root, params, onDone) {
   const msg = h('div', { class: 'msg' });
   const grid = h('div', { class: 'sudoku' });
   let msgState = '';
+  let finished = false;
+  let doneTimer = null;
 
   for (let i = 0; i < SIZE * SIZE; i++) {
     const r = Math.floor(i / SIZE), c = i % SIZE;
     const cls = [puzzle[i] ? 'given' : '', c === 2 ? 'c2' : '', r === 1 || r === 3 ? 'r1' : ''].join(' ');
-    const inp = h('input', { class: cls, inputmode: 'numeric', maxlength: '1', 'aria-label': `R${r + 1}C${c + 1}` });
+    const inp = h('input', { class: cls, inputmode: 'numeric', 'aria-label': `R${r + 1}C${c + 1}` });
     if (puzzle[i]) { inp.value = puzzle[i]; inp.readOnly = true; inp.tabIndex = -1; }
-    inp.addEventListener('input', () => {
+    const applyValue = () => {
+      if (finished) return;
       const v = inp.value.replace(/[^1-6]/g, '').slice(-1);
       inp.value = v;
       values[i] = v ? Number(v) : 0;
       refresh();
+    };
+    inp.addEventListener('input', (e) => {
+      if (e.isComposing) return;
+      applyValue();
     });
+    inp.addEventListener('compositionend', applyValue);
     inp.addEventListener('keydown', (e) => {
       const moves = { ArrowUp: -SIZE, ArrowDown: SIZE, ArrowLeft: -1, ArrowRight: 1 };
       if (moves[e.key] !== undefined) {
@@ -57,14 +65,17 @@ export function mount(root, params, onDone) {
   }
 
   function refresh() {
+    if (finished) return;
     const bad = new Set(conflicts(values));
     inputs.forEach((inp, i) => inp.classList.toggle('bad', bad.has(i) && !puzzle[i]));
     if (values.every((v) => v)) {
       if (values.every((v, i) => v === solution[i])) {
+        finished = true;
+        inputs.forEach((x) => { x.disabled = true; });
         msg.className = 'msg ok';
         msgState = 'ok';
         updateMsgText();
-        setTimeout(onDone, 500);
+        doneTimer = setTimeout(onDone, 500);
       } else {
         msg.className = 'msg err';
         msgState = 'err';
@@ -79,6 +90,10 @@ export function mount(root, params, onDone) {
 
   const offLang = onLangChange(() => updateMsgText());
   root.append(h('div', { class: 'puzzle' }, grid, msg));
-  setTimeout(() => inputs.find((x, i) => !puzzle[i])?.focus(), 50);
-  return () => { offLang(); };
+  const focusTimer = setTimeout(() => { if (!finished) inputs.find((x, i) => !puzzle[i])?.focus(); }, 50);
+  return () => {
+    offLang();
+    clearTimeout(doneTimer);
+    clearTimeout(focusTimer);
+  };
 }

@@ -17,6 +17,8 @@ export function mount(root, params, onDone) {
   let problems, k;
   let lastWrong = null;
   let msgState = '';
+  let finished = false;
+  let doneTimer = null;
   const q = h('div', { class: 'arith-q' });
   const bar = h('div', { class: 'progress' });
   const input = h('input', { inputmode: 'numeric', autocomplete: 'off', placeholder: t('输入结果', 'Answer') });
@@ -29,7 +31,7 @@ export function mount(root, params, onDone) {
     } else if (msgState === 'err' && lastWrong) {
       msg.textContent = t(
         `✗ ${lastWrong.text} = ${lastWrong.answer}，本组已重新开始`,
-        `✗ ${lastWrong.text} = ${lastWrong.answer} — Resetting this round (重新开始)`,
+        `✗ ${lastWrong.text} = ${lastWrong.answer} — Resetting this round`,
       );
     }
   }
@@ -46,6 +48,7 @@ export function mount(root, params, onDone) {
     input.focus();
   }
   function answer() {
+    if (finished) return;
     if (!input.value.trim()) return;
     const p = problems[k];
     if (checkAnswer(p, input.value)) {
@@ -54,10 +57,11 @@ export function mount(root, params, onDone) {
       msgState = 'ok';
       updateMsgText();
       if (k === COUNT) {
+        finished = true;
         q.textContent = t('全部答对', 'All Correct');
         input.disabled = true;
         submit.disabled = true;
-        setTimeout(onDone, 500);
+        doneTimer = setTimeout(onDone, 500);
         return;
       }
       render();
@@ -81,5 +85,8 @@ export function mount(root, params, onDone) {
   input.addEventListener('keydown', (e) => { if (e.key === 'Enter') answer(); });
   root.append(h('div', { class: 'puzzle arith' }, bar, q, h('div', { class: 'row' }, input, submit), msg));
   reset();
-  return () => { offLang(); };
+  return () => {
+    offLang();
+    clearTimeout(doneTimer);
+  };
 }

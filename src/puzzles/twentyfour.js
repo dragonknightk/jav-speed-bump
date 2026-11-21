@@ -55,12 +55,12 @@ export function isSolvable(nums) { return solve24(nums).solutions.length > 0; }
 /**
  * 生成若干组有解的 24 点。level 越高，数字范围越大、越偏向"难题"（解法少或需要分数）。
  */
-export function generate24({ level = 2, rounds, seed } = {}) {
+export function generate24({ level = 2, rounds, seed, exclude } = {}) {
   const rng = makeRng(seed);
   const count = rounds ?? (3 + (level >= 2.5 ? 1 : 0) + (level >= 4 ? 1 : 0));
   const maxNum = level < 1.5 ? 10 : 13;
   const out = [];
-  const seen = new Set();
+  const seen = new Set(exclude || []);
   let guard = 0;
   while (out.length < count && guard++ < 5000) {
     const nums = [0, 0, 0, 0].map(() => rng.int(1, maxNum));
@@ -134,6 +134,13 @@ export function evaluate(src) {
   const factor = () => {
     const tk = tokens[p++];
     if (!tk) throw new Error('算式不完整');
+    if (tk.t === '-') {
+      const v = factor();
+      return frac(-v.n, v.d);
+    }
+    if (tk.t === '+') {
+      return factor();
+    }
     if (tk.t === 'num') { used.push(tk.v); return frac(tk.v); }
     if (tk.t === '(') {
       const v = expr();

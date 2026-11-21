@@ -54,4 +54,18 @@ test('check24 拒绝错误答案', () => {
   assert.equal(check24([4, 6, 1, 1], 'alert(1)').ok, false);
   assert.equal(check24([3, 3, 8, 8], '8/(3-3)*8').ok, false);
   assert.ok(check24([3, 3, 8, 8], '8 ÷ (3 − 8 ÷ 3)').ok);
+  // 支持一元负号
+  assert.ok(check24([3, 9, 4, 1], '(-3 + 9) * 4 * 1').ok);
+  assert.ok(check24([3, 9, 4, 1], '-(3 - 9) * 4 * 1').ok);
+});
+
+test('generate24 exclude 能避开已有牌组', () => {
+  const first = generate24({ level: 2, rounds: 3, seed: 10 });
+  const exclude = first.map((s) => s.nums.slice().sort((a, b) => a - b).join(','));
+  const next = generate24({ level: 2, rounds: 2, seed: 10, exclude });
+  assert.equal(next.length, 2);
+  for (const s of next) {
+    const k = s.nums.slice().sort((a, b) => a - b).join(',');
+    assert.ok(!exclude.includes(k));
+  }
 });

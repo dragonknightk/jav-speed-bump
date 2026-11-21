@@ -34,6 +34,8 @@ export function mount(root, params, onDone) {
   let k = 0;
   let msgState = '';
   let lastRawErr = '';
+  let finished = false;
+  let doneTimer = null;
   const counter = h('div', { class: 'muted' });
   const cards = h('div', { class: 'cards' });
   const input = h('input', {
@@ -43,24 +45,52 @@ export function mount(root, params, onDone) {
   });
   const msg = h('div', { class: 'msg' });
   const ins = (s) => {
+    if (finished) return;
     const a = input.selectionStart ?? input.value.length, b = input.selectionEnd ?? a;
     input.value = input.value.slice(0, a) + s + input.value.slice(b);
     input.focus();
     input.setSelectionRange(a + s.length, a + s.length);
     markUsed();
   };
-  const clearBtn = h('button', { onclick: () => { input.value = ''; input.focus(); markUsed(); } }, t('清空', 'Clear'));
+  const backspace = () => {
+    if (finished) return;
+    const v = input.value;
+    const start = input.selectionStart ?? v.length;
+    const end = input.selectionEnd ?? start;
+    if (start !== end) {
+      input.value = v.slice(0, start) + v.slice(end);
+      input.focus();
+      input.setSelectionRange(start, start);
+    } else if (start > 0) {
+      const left = v.slice(0, start);
+      const strippedOp = left.replace(/\s*[+\-−×÷*/]\s*$/, '');
+      const nextLeft = strippedOp !== left ? strippedOp : left.slice(0, -1);
+      input.value = nextLeft + v.slice(end);
+      input.focus();
+      input.setSelectionRange(nextLeft.length, nextLeft.length);
+    } else {
+      input.focus();
+    }
+    markUsed();
+  };
+  const clearBtn = h('button', { onclick: () => { if (finished) return; input.value = ''; input.focus(); markUsed(); } }, t('清空', 'Clear'));
   const submitBtn = h('button', { class: 'primary', onclick: () => submit() }, t('提交', 'Submit'));
   const keysBar = h('div', { class: 'keys' },
     ...[['+', ' + '], ['−', ' − '], ['×', ' × '], ['÷', ' ÷ '], ['(', '('], [')', ')']].map(([label, text]) => h('button', { onclick: () => ins(text) }, label)),
-    h('button', { onclick: () => { input.value = input.value.replace(/\s*\S\s*$/, ''); input.focus(); markUsed(); } }, '⌫'),
+    h('button', { onclick: backspace }, '⌫'),
     clearBtn,
     submitBtn,
   );
   const swap = h('button', { class: 'small', onclick: () => {
-    const extra = generate24({ ...params, rounds: 2 });
-    sets.splice(k, 1, extra[0]);
-    sets.push(extra[1]);
+    if (finished) return;
+    const exclude = sets.map((s) => s.nums.slice().sort((a, b) => a - b).join(','));
+    let extra = generate24({ ...params, rounds: 2, exclude });
+    if (extra.length < 2) {
+      const fallback = generate24({ ...params, rounds: 2 });
+      extra = [...extra, ...fallback].slice(0, 2);
+    }
+    if (extra[0]) sets.splice(k, 1, extra[0]);
+    if (extra[1]) sets.push(extra[1]);
     msg.className = 'msg';
     msgState = 'swap';
     msg.textContent = t('已更换当前题目，本组总题数 +1', 'Swapped card set (total rounds +1)');
@@ -78,7 +108,8 @@ export function mount(root, params, onDone) {
     });
   }
   function updateCounterText() {
-    counter.textContent = t(`当前进度：第 ${k + 1} / ${sets.length} 题`, `Round ${k + 1} / ${sets.length}`);
+    const cur = Math.min(k + 1, sets.length);
+    counter.textContent = t(`当前进度：第 ${cur} / ${sets.length} 题`, `Round ${cur} / ${sets.length}`);
   }
   function render() {
     updateCounterText();
@@ -87,13 +118,21 @@ export function mount(root, params, onDone) {
     input.focus();
   }
   function submit() {
+    if (finished || k >= sets.length) return;
     const r = check24(sets[k].nums, input.value);
     if (r.ok) {
       k++;
       msg.className = 'msg ok';
       msgState = 'ok';
       msg.textContent = t('✓ 算式正确', '✓ Correct');
-      if (k === sets.length) { input.disabled = true; setTimeout(onDone, 500); return; }
+      if (k === sets.length) {
+        finished = true;
+        input.disabled = true;
+        swap.disabled = true;
+        [...keysBar.querySelectorAll('button')].forEach((b) => { b.disabled = true; });
+        doneTimer = setTimeout(onDone, 500);
+        return;
+      }
       render();
     } else {
       msg.className = 'msg err';
@@ -119,5 +158,8 @@ export function mount(root, params, onDone) {
   input.addEventListener('input', markUsed);
   root.append(h('div', { class: 'puzzle' }, counter, cards, input, keysBar, msg, h('div', { style: 'margin-top:8px' }, swap)));
   render();
-  return () => { offLang(); };
+  return () => {
+    offLang();
+    clearTimeout(doneTimer);
+  };
 }
