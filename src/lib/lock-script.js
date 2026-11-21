@@ -12,7 +12,7 @@ export function detectLockOs() {
   return 'win';
 }
 
-/** 生成 Windows 单文件防卸载上锁脚本 (.bat)，使用原生 reg.exe，稳定无转义问题 */
+/** 生成 Windows 单文件防卸载上锁脚本 (.bat)，同时覆盖 Chrome / Edge / Brave */
 export function buildLockBat() {
   const lines = [
     '@echo off',
@@ -29,35 +29,27 @@ export function buildLockBat() {
     'set "INSTALL_DIR=%ProgramFiles%\\jav-speed-bump"',
     'set "UNINSTALL_CMD=%INSTALL_DIR%\\uninstall.cmd"',
     'set "CHROME_LIST=HKLM\\SOFTWARE\\Policies\\Google\\Chrome\\ExtensionInstallForcelist"',
+    'set "EDGE_LIST=HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge\\ExtensionInstallForcelist"',
+    'set "BRAVE_LIST=HKLM\\SOFTWARE\\Policies\\BraveSoftware\\Brave\\ExtensionInstallForcelist"',
     'set "UNINSTALL_KEY=HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\jav-speed-bump"',
     '',
     'if not exist "%INSTALL_DIR%" mkdir "%INSTALL_DIR%"',
     '',
-    'set "SLOT=1"',
-    'for /L %%i in (1,1,99) do (',
-    '  reg query "%CHROME_LIST%" /v "%%i" >nul 2>&1',
-    '  if errorlevel 1 (',
-    '    set "SLOT=%%i"',
-    '    goto :found_slot',
-    '  )',
-    '  reg query "%CHROME_LIST%" /v "%%i" 2>nul | findstr /I "%EXT_ID%" >nul 2>&1',
-    '  if not errorlevel 1 (',
-    '    set "SLOT=%%i"',
-    '    goto :found_slot',
-    '  )',
-    ')',
-    ':found_slot',
+    'call :lock_browser "%CHROME_LIST%"',
+    'call :lock_browser "%EDGE_LIST%"',
+    'call :lock_browser "%BRAVE_LIST%"',
     '',
     '(',
     '  echo @echo off',
-    '  echo for /L %%%%i in ^(1,1,99^) do ^(',
-    '  echo   reg query "%CHROME_LIST%" /v "%%%%i" 2^>nul ^^^| findstr /I "%EXT_ID%" ^>nul 2^>^&1 ^&^& reg delete "%CHROME_LIST%" /v "%%%%i" /f ^>nul 2^>^&1',
+    '  echo for %%%%k in ^("%CHROME_LIST%" "%EDGE_LIST%" "%BRAVE_LIST%"^) do ^(',
+    '  echo   for /L %%%%i in ^(1,1,99^) do ^(',
+    '  echo     reg query %%%%k /v "%%%%i" 2^>nul ^| findstr /I "%EXT_ID%" ^>nul 2^>^&1 ^&^& reg delete %%%%k /v "%%%%i" /f ^>nul 2^>^&1',
+    '  echo   ^)',
     '  echo ^)',
     '  echo reg delete "%UNINSTALL_KEY%" /f ^>nul 2^>^&1',
-    '  echo start "" /b cmd /c "ping 127.0.0.1 -n 2 >nul & rmdir /s /q \\"%INSTALL_DIR%\\""',
+    '  echo start "" /b cmd /c "ping 127.0.0.1 -n 2 >nul & rmdir /s /q "%INSTALL_DIR%""',
     ') > "%UNINSTALL_CMD%"',
     '',
-    'reg add "%CHROME_LIST%" /v "%SLOT%" /t REG_SZ /d "%EXT_ID%;%UPDATE_URL%" /f >nul',
     'reg add "%UNINSTALL_KEY%" /v "DisplayName" /t REG_SZ /d "JAV Speed Bump Policy Lock" /f >nul',
     `reg add "%UNINSTALL_KEY%" /v "DisplayVersion" /t REG_SZ /d "${VERSION}" /f >nul`,
     'reg add "%UNINSTALL_KEY%" /v "Publisher" /t REG_SZ /d "JAV Speed Bump" /f >nul',
@@ -68,11 +60,34 @@ export function buildLockBat() {
     '',
     'echo.',
     'echo ========================================================',
-    'echo   [OK] 防卸载策略已写入！请完全关闭并重启 Chrome 浏览器生效。',
-    'echo   [OK] Policy lock applied! Please restart Chrome to apply.',
+    'echo   [OK] 防卸载策略已写入（Chrome / Edge / Brave）！请完全关闭并重启浏览器生效。',
+    'echo   [OK] Policy lock applied (Chrome / Edge / Brave)! Please restart your browser.',
     'echo ========================================================',
     'echo.',
     'timeout /t 4',
+    'exit /b 0',
+    '',
+    ':lock_browser',
+    'set "TARGET_LIST=%~1"',
+    'set "SLOT="',
+    'for /L %%i in (1,1,99) do (',
+    '  reg query "%TARGET_LIST%" /v "%%i" 2>nul | findstr /I "%EXT_ID%" >nul 2>&1',
+    '  if not errorlevel 1 (',
+    '    set "SLOT=%%i"',
+    '    goto :write_slot',
+    '  )',
+    ')',
+    'for /L %%i in (1,1,99) do (',
+    '  reg query "%TARGET_LIST%" /v "%%i" >nul 2>&1',
+    '  if errorlevel 1 (',
+    '    set "SLOT=%%i"',
+    '    goto :write_slot',
+    '  )',
+    ')',
+    'set "SLOT=1"',
+    ':write_slot',
+    'reg add "%TARGET_LIST%" /v "%SLOT%" /t REG_SZ /d "%EXT_ID%;%UPDATE_URL%" /f >nul',
+    'exit /b 0',
   ];
   return lines.join('\r\n') + '\r\n';
 }
@@ -132,7 +147,7 @@ export function buildLockMobileConfig() {
   <key>PayloadType</key>
   <string>Configuration</string>
   <key>PayloadUUID</key>
-  <string>A1B2C3D4-0000-4000-8000-JAVSPEEDBUMP</string>
+  <string>A1B2C3D4-0000-4000-8000-000000000000</string>
   <key>PayloadOrganization</key>
   <string>JAV Speed Bump</string>
   <key>PayloadVersion</key>

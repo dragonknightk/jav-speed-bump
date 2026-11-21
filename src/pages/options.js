@@ -1,5 +1,8 @@
 import { h } from './ui/h.js';
-import { DEFAULT_DOMAINS, DEFAULT_KEYWORDS, ALL_DEFAULT_DOMAINS, normalizeDomain, isValidDomain } from '../lib/blocklist.js';
+import {
+  DEFAULT_DOMAINS, DEFAULT_KEYWORDS, ALL_DEFAULT_DOMAINS,
+  validateDomainInput, normalizeKeyword,
+} from '../lib/blocklist.js';
 import { getSettings, addItem, setSteamMode, requestRemoval, cancelRemoval, applyDueRemovals } from '../lib/storage.js';
 import { formatDuration } from '../lib/time.js';
 import { detectLockOs, buildLockBat, buildLockMobileConfig } from '../lib/lock-script.js';
@@ -72,7 +75,12 @@ async function load() {
 }
 
 function isPending(type, v) {
-  return settings.pendingRemovals.find((p) => p.type === type && (type === 'steam' || p.value === v));
+  const norm = type === 'keyword' ? normalizeKeyword(v) : v;
+  return settings.pendingRemovals.find((p) => {
+    if (p.type !== type) return false;
+    if (type === 'steam') return true;
+    return type === 'keyword' ? normalizeKeyword(p.value) === norm : p.value === norm;
+  });
 }
 
 function itemRow(type, v) {
@@ -122,9 +130,11 @@ function renderDomains() {
 
 function renderKeywords() {
   const q = $('kwFilter').value.trim().toLowerCase();
-  const removed = new Set(settings.removedKeywords);
-  const custom = settings.customKeywords.filter((k) => !removed.has(k));
-  const defs = DEFAULT_KEYWORDS.filter((k) => !removed.has(k) && !custom.includes(k));
+  const removed = new Set(settings.removedKeywords.map(normalizeKeyword).filter(Boolean));
+  const defSet = new Set(DEFAULT_KEYWORDS);
+  const custom = [...new Set(settings.customKeywords.map(normalizeKeyword).filter(Boolean))]
+    .filter((k) => !removed.has(k) && !defSet.has(k));
+  const defs = DEFAULT_KEYWORDS.filter((k) => !removed.has(k));
   const total = custom.length + defs.length;
 
   $('kwCountLabel').textContent = t(
@@ -357,12 +367,18 @@ async function add(type) {
   const msg = type === 'domain' ? $('domainMsg') : $('kwMsg');
   const raw = input.value;
   if (type === 'domain') {
-    const d = normalizeDomain(raw);
-    if (!d || !isValidDomain(d)) {
+    const check = validateDomainInput(raw);
+    if (!check.ok) {
       msg.className = 'msg err';
-      msg.textContent = t('域名格式不正确，请输入如 example.com 的有效域名', 'Invalid domain format (e.g. example.com)');
+      msg.textContent = check.reason === 'no_dot'
+        ? t(
+          '请输入包含后缀的完整域名（如 example.com）；若想按词拦截搜索，请添加到下方「搜索关键词拦截」',
+          'Enter a full domain with suffix (e.g. example.com). To block search terms, add them under Blocked Search Keywords below.',
+        )
+        : t('域名格式不正确，请输入如 example.com 的有效域名', 'Invalid domain format (e.g. example.com)');
       return;
     }
+    const d = check.domain;
     if (ALL_DEFAULT_DOMAINS.includes(d) && !settings.removedDomains.includes(d)) {
       msg.className = 'msg ok';
       msg.textContent = t(`✓ 「${d}」已在内置规则库中生效，无需重复添加`, `✓ "${d}" is already active in the built-in rules`);
@@ -370,10 +386,18 @@ async function add(type) {
       return;
     }
   } else {
-    const k = String(raw).trim();
-    if (k && DEFAULT_KEYWORDS.includes(k) && !settings.removedKeywords.includes(k)) {
+    const k = normalizeKeyword(raw);
+    const removedK = new Set(settings.removedKeywords.map(normalizeKeyword).filter(Boolean));
+    const customK = new Set(settings.customKeywords.map(normalizeKeyword).filter(Boolean));
+    if (k && DEFAULT_KEYWORDS.includes(k) && !removedK.has(k)) {
       msg.className = 'msg ok';
       msg.textContent = t(`✓ 「${k}」已在内置规则库中生效，无需重复添加`, `✓ "${k}" is already active in the built-in rules`);
+      input.value = '';
+      return;
+    }
+    if (k && customK.has(k) && !removedK.has(k)) {
+      msg.className = 'msg ok';
+      msg.textContent = t(`✓ 「${k}」已在自定义规则中生效，无需重复添加`, `✓ "${k}" is already active in your custom rules`);
       input.value = '';
       return;
     }
@@ -410,7 +434,7 @@ $('domainFilter').addEventListener('input', renderDomains);
 $('kwFilter').addEventListener('input', renderKeywords);
 
 $('downloadLock').addEventListener('click', () => {
-  const isMac = detectedOs === 'mac';
+  const isMac = activeLockOs === 'mac';
   const content = isMac ? buildLockMobileConfig() : buildLockBat();
   const mime = isMac ? 'application/x-apple-aspen-config;charset=utf-8' : 'application/x-bat;charset=utf-8';
   const filename = isMac ? 'JAV-Speed-Bump-Lock.mobileconfig' : 'JAV-Speed-Bump-Lock.bat';
@@ -448,4 +472,9 @@ if (sp.get('welcome')) {
 
 chrome.storage.onChanged.addListener((c) => { if (c.settings) load(); });
 load();
-setInterval(() => { if (settings?.pendingRemovals.length) render(); }, 60000);
+setInterval(async () => {
+  if (!settings?.pendingRemovals.length) return;
+  const applied = await applyDueRemovals();
+  if (applied > 0) await load();
+  else render();
+}, 60000);
