@@ -77,4 +77,8 @@
 
 @media (max-width: 560px) {
   .reasons { grid-template-columns: repeat(2, 1fr); }
+  .alt-actions .spacer { display: none; }
+  .alt-actions #more,
+  .alt-actions #statsLink { flex: 1 1 auto; }
+  .alt-actions #close { width: 100%; }
 }

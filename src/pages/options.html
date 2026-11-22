@@ -2,6 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>防护设置 · JAV Speed Bump</title>
 <link rel="icon" href="../icons/icon32.png">
 <link rel="stylesheet" href="common.css">
@@ -11,14 +12,14 @@
 <div class="stripe"></div>
 <div class="wrap">
   <header class="page-hd">
-    <div>
+    <div class="page-hd-top">
       <h1 id="pageTitle">🚧 色情减速带 · 防护设置</h1>
-      <p class="muted sub-desc" id="pageSub">新增防护立即生效 · 解除任何防护均需等待 24 小时冷静期，或当场完成三组难题</p>
+      <div class="row">
+        <a class="btn" id="statsBtn" href="stats.html">📊 数据统计</a>
+        <button class="small" id="langBtn">EN</button>
+      </div>
     </div>
-    <div class="row">
-      <a class="btn" id="statsBtn" href="stats.html">📊 数据统计</a>
-      <button class="small" id="langBtn">EN</button>
-    </div>
+    <p class="muted sub-desc" id="pageSub">新增防护立即生效 · 解除需等 24h 冷静期或完成三组难题</p>
   </header>
 
   <div id="banner"></div>
@@ -26,7 +27,6 @@
   <div class="panel pending-panel" id="pendingPanel" hidden>
     <div class="card-hd">
       <h2 id="pendingTitle">⏳ 冷静期解锁队列</h2>
-      <span class="tag amber" id="pendingBadge">倒计时期间防护依然有效</span>
     </div>
     <div id="pending"></div>
   </div>
@@ -37,8 +37,8 @@
       <h2 id="domainTitle">🌐 屏蔽网站</h2>
     </div>
     <p class="muted small card-desc" id="domainDesc"></p>
-    <div class="row">
-      <input id="domainInput" placeholder="输入要屏蔽的域名，如 example.com" style="flex:1;min-width:220px">
+    <div class="row add-row">
+      <input id="domainInput" placeholder="输入要屏蔽的域名，如 example.com">
       <button class="primary" id="domainAdd">添加网站</button>
     </div>
     <div class="msg" id="domainMsg"></div>
@@ -62,8 +62,8 @@
       <h2 id="kwTitle">🔍 搜索关键词拦截</h2>
     </div>
     <p class="muted small card-desc" id="kwDesc"></p>
-    <div class="row">
-      <input id="kwInput" placeholder="输入要拦截的搜索关键词" style="flex:1;min-width:220px">
+    <div class="row add-row">
+      <input id="kwInput" placeholder="输入要拦截的搜索关键词">
       <button class="primary" id="kwAdd">添加关键词</button>
     </div>
     <div class="msg" id="kwMsg"></div>

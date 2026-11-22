@@ -32,12 +32,11 @@ function applyStaticI18n() {
   $('langBtn').textContent = isEn() ? '中文' : 'EN';
   $('pageTitle').textContent = t('🚧 色情减速带 · 防护设置', '🚧 JAV Speed Bump · Settings');
   $('pageSub').textContent = t(
-    '新增防护立即生效 · 解除任何防护均需等待 24 小时冷静期，或当场完成三组难题',
-    'Adding protection takes effect immediately · Removing any protection requires a 24h cooldown or solving 3 puzzles',
+    '新增防护立即生效 · 解除需等 24h 冷静期或完成三组难题',
+    'Protection activates immediately · Removal requires a 24h cooldown or 3 puzzles',
   );
   $('statsBtn').textContent = t('📊 数据统计', '📊 Statistics');
   $('pendingTitle').textContent = t('⏳ 冷静期解锁队列', '⏳ Cooldown Queue');
-  $('pendingBadge').textContent = t('倒计时期间防护依然有效', 'Protection remains active during countdown');
 
   $('domainTitle').textContent = t('🌐 屏蔽网站', '🌐 Blocked Websites');
   $('domainDesc').innerHTML = t(
@@ -258,18 +257,18 @@ function renderLock() {
     h('button', {
       class: !isMac ? 'active' : '',
       onclick: () => { activeLockOs = 'win'; renderLock(); },
-    }, '🪟 Windows'),
+    }, 'Windows'),
     h('button', {
       class: isMac ? 'active' : '',
       onclick: () => { activeLockOs = 'mac'; renderLock(); },
-    }, '🍎 macOS'),
+    }, 'macOS'),
   );
 
   if (!isMac) {
     $('lockSteps').replaceChildren(
       h('div', { class: 'lock-step' },
         h('b', {}, t('第 1 步 · 点击下载', 'Step 1 · Download')),
-        h('span', {}, t('点击右上角「下载防卸载上锁工具」按钮', 'Click "Download Lock Tool" at the top right'))),
+        h('span', {}, t('点击「下载防卸载上锁工具」按钮', 'Click "Download Lock Tool"'))),
       h('div', { class: 'lock-step' },
         h('b', {}, t('第 2 步 · 打开并运行', 'Step 2 · Open & Run')),
         h('span', {}, t('在下载栏点击「打开」，在弹窗中依次点击「运行」→「是」（注：本地生成的脚本未绑定付费商业证书，提示“未知发布者”属正常现象）', 'Click "Open" in your browser download bar, then click "Run" → "Yes" (local script has no commercial certificate, so "Unknown Publisher" is normal)'))),
@@ -285,7 +284,7 @@ function renderLock() {
     $('lockSteps').replaceChildren(
       h('div', { class: 'lock-step' },
         h('b', {}, t('第 1 步 · 点击下载', 'Step 1 · Download')),
-        h('span', {}, t('点击右上角「下载防卸载上锁工具」按钮', 'Click "Download Lock Tool" at the top right'))),
+        h('span', {}, t('点击「下载防卸载上锁工具」按钮', 'Click "Download Lock Tool"'))),
       h('div', { class: 'lock-step' },
         h('b', {}, t('第 2 步 · 打开并安装', 'Step 2 · Open & Install')),
         h('span', {}, t('在下载栏点「打开」，随后进入 Mac「系统设置 → 通用 → 设备管理」，双击 JAV Speed Bump Policy Lock 点击「安装」并验证密码', 'Click "Open" in downloads, then go to macOS "System Settings → General → Device Management", double-click "JAV Speed Bump Policy Lock" to Install'))),
@@ -337,7 +336,11 @@ function unlockNow(p) {
 
 function askRemove(type, value) {
   const bg = h('div', { class: 'modal-bg' });
-  const close = () => bg.remove();
+  const onKey = (e) => { if (e.key === 'Escape') close(); };
+  const close = () => {
+    document.removeEventListener('keydown', onKey);
+    bg.remove();
+  };
   const isSteam = type === 'steam';
   const titleText = isSteam
     ? t('确认要关闭「Steam 封锁」？', 'Turn off Steam Protection?')
@@ -353,12 +356,12 @@ function askRemove(type, value) {
   bg.append(h('div', { class: 'modal' },
     h('h2', { style: 'margin-top:0' }, titleText),
     h('p', { class: 'muted' }, descText),
-    h('div', { class: 'row', style: 'margin-top:18px' },
+    h('div', { class: 'modal-actions' },
       h('button', { onclick: async () => { await requestRemoval(type, value); close(); await load(); } }, waitBtnText),
-      h('button', { onclick: async () => { const p = await requestRemoval(type, value); unlockNow(p); } }, nowBtnText),
-      h('span', { class: 'spacer' }),
+      h('button', { onclick: async () => { const p = await requestRemoval(type, value); close(); unlockNow(p); } }, nowBtnText),
       h('button', { class: 'primary', onclick: close }, keepBtnText))));
   bg.addEventListener('click', (e) => { if (e.target === bg) close(); });
+  document.addEventListener('keydown', onKey);
   document.body.append(bg);
 }
 

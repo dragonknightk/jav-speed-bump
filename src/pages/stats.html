@@ -2,6 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>数据统计 · JAV Speed Bump</title>
 <link rel="icon" href="../icons/icon32.png">
 <link rel="stylesheet" href="common.css">
@@ -10,10 +11,16 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 10px 16px;
+  flex-wrap: wrap;
   padding-bottom: 16px;
   border-bottom: 1px solid var(--line);
   margin-bottom: 18px;
+}
+
+.page-hd > .row {
+  flex-shrink: 0;
+  flex-wrap: nowrap;
 }
 
 .bento {
@@ -77,25 +84,68 @@
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 12px;
+  flex-wrap: wrap;
+  gap: 4px 12px;
   margin: 26px 0 10px;
 }
-.section-bar h2 { margin: 0; font-size: 18px; }
+.section-bar h2 { margin: 0; font-size: 18px; flex-shrink: 0; }
 
-svg text { fill: #8b97a8; font-size: 11px; font-family: inherit; }
+.chart-panel { overflow-x: auto; }
+.chart-panel svg { display: block; width: 100%; min-width: 580px; height: auto; }
+
+svg text { fill: #8b97a8; font-size: 11.5px; font-family: inherit; }
 svg .bar { fill: var(--accent); }
 svg .bar.today { fill: var(--accent2); }
 svg .grid { stroke: #283240; }
 svg .val { fill: #e8edf4; font-weight: 600; }
 
-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-td, th { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); word-break: break-word; }
+.hbar-list { display: flex; flex-direction: column; gap: 10px; }
+.hbar-row {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr) 86px;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+.hbar-lbl {
+  text-align: right;
+  color: var(--text-sub);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hbar-track {
+  height: 18px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.hbar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 4px;
+}
+.hbar-val {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.table-panel { overflow-x: auto; }
+table { width: 100%; min-width: 580px; border-collapse: collapse; font-size: 14px; }
+td, th { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); }
 tr:last-child td { border-bottom: none; }
-th { color: var(--muted); font-weight: 500; font-size: 13px; }
+th { color: var(--muted); font-weight: 500; font-size: 13px; white-space: nowrap; }
+td.col-nowrap { white-space: nowrap; }
+td.col-target { min-width: 150px; word-break: break-word; }
 
 @media (max-width: 760px) {
   .bento { grid-template-columns: repeat(2, 1fr); }
   .stat.hero { grid-column: 1 / -1; grid-row: auto; }
+}
+@media (max-width: 480px) {
+  .hbar-row { grid-template-columns: 68px minmax(0, 1fr) 76px; gap: 8px; font-size: 12.5px; }
 }
 </style>
 </head>
@@ -116,13 +166,13 @@ th { color: var(--muted); font-weight: 500; font-size: 13px; }
     <h2 id="dailyTitle">近 30 天触发趋势</h2>
     <span class="muted small" id="dailySub">柱体越低越平稳 · 绿色柱代表今日</span>
   </div>
-  <div class="panel" id="daily"></div>
+  <div class="panel chart-panel" id="daily"></div>
 
   <div class="section-bar">
     <h2 id="hourlyTitle">高发时段分布（24 小时）</h2>
     <span class="muted small" id="hourlySub">柱体较高的时段为冲动易发期，可提前安排运动或外出</span>
   </div>
-  <div class="panel" id="hourly"></div>
+  <div class="panel chart-panel" id="hourly"></div>
 
   <div class="section-bar">
     <h2 id="reasonTitle">触发诱因占比</h2>
@@ -134,7 +184,7 @@ th { color: var(--muted); font-weight: 500; font-size: 13px; }
     <h2 id="recentTitle">近期拦截明细</h2>
     <span class="muted small" id="recentSub">最近 20 条触发记录</span>
   </div>
-  <div class="panel" style="overflow-x:auto"><table id="recent"></table></div>
+  <div class="panel table-panel"><table id="recent"></table></div>
 </div>
 <script type="module" src="stats.js"></script>
 </body>

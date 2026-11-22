@@ -1,16 +1,34 @@
 .page-hd {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
   padding-bottom: 16px;
   border-bottom: 1px solid var(--line);
   margin-bottom: 18px;
 }
 
-.page-hd > .row {
+.page-hd-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 14px;
+  flex-wrap: wrap;
+}
+
+.page-hd-top > .row {
   flex-shrink: 0;
   flex-wrap: nowrap;
+  margin-left: auto;
+}
+
+.add-row input {
+  flex: 1 1 180px;
+  min-width: 0;
+}
+
+@media (max-width: 440px) {
+  .page-hd-top { gap: 8px; }
+  .page-hd-top h1 { font-size: 18px; }
+  .page-hd-top > .row { gap: 6px; }
+  .page-hd-top > .row .btn,
+  .page-hd-top > .row button { padding: 5px 10px; font-size: 12.5px; }
 }
 
 .sub-desc {
@@ -149,7 +167,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 6px 8px;
+  flex-wrap: wrap;
 }
 
 .mode-hd b {
@@ -196,6 +215,7 @@
   display: flex;
   gap: 8px;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 /* 防卸载保护卡片 */
@@ -277,6 +297,25 @@
 
 @media (max-width: 720px) {
   .lock-steps { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 520px) {
+  .pending-btns { width: 100%; }
+  .pending-btns button { flex: 1 1 150px; }
+  .steam-actions { width: 100%; }
+  .steam-actions button { width: 100%; }
+  .lock-hd-actions { width: 100%; flex-direction: column; align-items: stretch; gap: 8px; }
+  .os-tabs { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
+  .lock-hd-actions #downloadLock { width: 100%; }
+}
+
+@media (max-width: 420px) {
+  .add-row { flex-direction: column; align-items: stretch; gap: 8px; }
+  .add-row input { flex: none; width: 100%; }
+  .add-row button { width: 100%; }
+  .mode-box { padding: 12px; }
+  .mode-hd b { font-size: 13.5px; }
+  .drawer-bar { padding: 8px 12px; }
 }
 
 code {

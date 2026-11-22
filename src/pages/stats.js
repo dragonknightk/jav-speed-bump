@@ -14,7 +14,7 @@ const s = (tag, attrs = {}, text) => {
 };
 
 function barChart(data, { height = 180, labelEvery = 1, highlight } = {}) {
-  const W = 820, H = height, padL = 28, padB = 22, padT = 14;
+  const W = 720, H = height, padL = 28, padB = 22, padT = 16;
   const max = Math.max(1, ...data.map((d) => d.count));
   const svg = s('svg', { viewBox: `0 0 ${W} ${H}`, width: '100%', role: 'img' });
   const ticks = Math.min(max, 4);
@@ -37,19 +37,17 @@ function barChart(data, { height = 180, labelEvery = 1, highlight } = {}) {
 }
 
 function hBarChart(data) {
-  const W = 820, row = 30, H = data.length * row + 6, padL = 88;
   const max = Math.max(1, ...data.map((d) => d.count));
   const total = data.reduce((a, d) => a + d.count, 0) || 1;
-  const svg = s('svg', { viewBox: `0 0 ${W} ${H}`, width: '100%', role: 'img' });
-  data.forEach((d, i) => {
-    const y = i * row + 4;
-    const w = ((W - padL - 104) * d.count) / max;
+  return h('div', { class: 'hbar-list' }, ...data.map((d) => {
+    const pct = d.count ? (d.count / max) * 100 : 0;
     const lbl = d.key ? reasonText(d.key) : t('未选择', 'Unlogged');
-    svg.append(s('text', { x: padL - 10, y: y + 17, 'text-anchor': 'end' }, lbl));
-    svg.append(s('rect', { x: padL, y, width: Math.max(w, 0), height: row - 10, rx: 3, class: 'bar' }));
-    svg.append(s('text', { x: padL + w + 8, y: y + 17, class: 'val' }, t(`${d.count} 次 (${Math.round((d.count / total) * 100)}%)`, `${d.count} (${Math.round((d.count / total) * 100)}%)`)));
-  });
-  return svg;
+    const val = t(`${d.count} 次 (${Math.round((d.count / total) * 100)}%)`, `${d.count} (${Math.round((d.count / total) * 100)}%)`);
+    return h('div', { class: 'hbar-row' },
+      h('span', { class: 'hbar-lbl', title: lbl }, lbl),
+      h('div', { class: 'hbar-track' }, h('div', { class: 'hbar-fill', style: `width:${pct.toFixed(1)}%` })),
+      h('span', { class: 'hbar-val' }, val));
+  }));
 }
 
 function kindBadge(l) {
@@ -106,7 +104,9 @@ async function init() {
   );
 
   const today = dayKey(now);
-  document.getElementById('daily').replaceChildren(barChart(byDay(logs, 30, now), { labelEvery: 3, highlight: (d) => d.key === today }));
+  const dailyEl = document.getElementById('daily');
+  dailyEl.replaceChildren(barChart(byDay(logs, 30, now), { labelEvery: 3, highlight: (d) => d.key === today }));
+  dailyEl.scrollLeft = dailyEl.scrollWidth;
   document.getElementById('hourly').replaceChildren(barChart(byHour(logs), { height: 160, labelEvery: 1 }));
   const reviewedCount = logs.filter((l) => l.completed || Boolean(l.reason)).length;
   document.getElementById('reasons').replaceChildren(hBarChart(byReason(logs, { reviewedOnly: true })));
@@ -137,11 +137,11 @@ async function init() {
       h('th', {}, t('触发诱因', 'Reason')),
       h('th', {}, t('解题用时', 'Duration'))),
     ...(recent.length ? recent.map((l) => h('tr', {},
-      h('td', {}, new Date(l.ts).toLocaleString(isEn() ? 'en-US' : 'zh-CN', { hour12: false })),
-      h('td', {}, kindBadge(l)),
-      h('td', {}, l.domain + (l.kind === 'keyword' || (l.kind === 'steam' && l.match && l.match !== l.domain) ? ` (${l.match})` : '')),
-      h('td', {}, reasonText(l.reason)),
-      h('td', {}, formatRowDuration(l))))
+      h('td', { class: 'col-nowrap' }, new Date(l.ts).toLocaleString(isEn() ? 'en-US' : 'zh-CN', { hour12: false })),
+      h('td', { class: 'col-nowrap' }, kindBadge(l)),
+      h('td', { class: 'col-target' }, l.domain + (l.kind === 'keyword' || (l.kind === 'steam' && l.match && l.match !== l.domain) ? ` (${l.match})` : '')),
+      h('td', { class: 'col-nowrap' }, reasonText(l.reason)),
+      h('td', { class: 'col-nowrap' }, formatRowDuration(l))))
       : [h('tr', {}, h('td', { colspan: 5, class: 'muted' }, t('暂无触发记录', 'No records yet')))]));
 }
 
