@@ -22,11 +22,11 @@ export function bonusLevelFor(level) {
 }
 
 const LEVEL_PARAMS = {
-  1: { sudoku: { givens: 15 }, nonogram: { size: 10, density: 0.58 }, arithmetic: { level: 1 }, twentyfour: { level: 1 } },
-  2: { sudoku: { givens: 14 }, nonogram: { size: 10, density: 0.55 }, arithmetic: { level: 2 }, twentyfour: { level: 2 } },
-  3: { sudoku: { givens: 13 }, nonogram: { size: 11, density: 0.58 }, arithmetic: { level: 3 }, twentyfour: { level: 3 } },
-  4: { sudoku: { givens: 11 }, nonogram: { size: 11, density: 0.55 }, arithmetic: { level: 4 }, twentyfour: { level: 4 } },
-  5: { sudoku: { givens: 10 }, nonogram: { size: 12, density: 0.58 }, arithmetic: { level: 5 }, twentyfour: { level: 5 } },
+  1: { sudoku: { givens: 15 }, nonogram: { size: 8, density: 0.58 }, arithmetic: { level: 1 }, twentyfour: { level: 1 } },
+  2: { sudoku: { givens: 14 }, nonogram: { size: 8, density: 0.55 }, arithmetic: { level: 2 }, twentyfour: { level: 2 } },
+  3: { sudoku: { givens: 13 }, nonogram: { size: 9, density: 0.58 }, arithmetic: { level: 3 }, twentyfour: { level: 3 } },
+  4: { sudoku: { givens: 11 }, nonogram: { size: 9, density: 0.55 }, arithmetic: { level: 4 }, twentyfour: { level: 4 } },
+  5: { sudoku: { givens: 10 }, nonogram: { size: 10, density: 0.58 }, arithmetic: { level: 5 }, twentyfour: { level: 5 } },
 };
 
 /** 把 1–5 整数难度换算成各类题目的参数 */

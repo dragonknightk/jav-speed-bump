@@ -59,10 +59,12 @@ test('终局第 4 题难度为 max(level - 2, 1)', () => {
 
 test('paramsFor 1–5 整数阶梯单调递进', () => {
   assert.equal(paramsFor(1).sudoku.givens, 15);
-  assert.equal(paramsFor(1).nonogram.size, 10);
-  assert.equal(paramsFor(3).nonogram.size, 11);
+  assert.equal(paramsFor(1).nonogram.size, 8);
+  assert.equal(paramsFor(2).nonogram.size, 8);
+  assert.equal(paramsFor(3).nonogram.size, 9);
+  assert.equal(paramsFor(4).nonogram.size, 9);
   assert.equal(paramsFor(5).sudoku.givens, 10);
-  assert.equal(paramsFor(5).nonogram.size, 12);
+  assert.equal(paramsFor(5).nonogram.size, 10);
   for (let lv = 1; lv < 5; lv++) {
     assert.ok(paramsFor(lv).sudoku.givens > paramsFor(lv + 1).sudoku.givens);
     assert.ok(paramsFor(lv).nonogram.size <= paramsFor(lv + 1).nonogram.size);

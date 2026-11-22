@@ -21,7 +21,7 @@ export function mount(root, params, onDone) {
   let painting = null;
   let finished = false;
   let doneTimer = null;
-  const table = h('table', { class: 'nono' + (n >= 12 ? ' size-12' : n === 11 ? ' size-11' : '') });
+  const table = h('table', { class: 'nono' });
   const head = h('tr', {}, h('td'));
   const colEls = puz.cols.map((cl) => {
     const td = h('td', { class: 'cc' }, ...cl.flatMap((v, i) => (i ? [h('br'), String(v)] : [String(v)])));

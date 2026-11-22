@@ -25,7 +25,7 @@ test('solveLine 基本推理', () => {
 });
 
 test('生成的数织：提示与答案一致、可纯逻辑解出且解唯一', () => {
-  for (const size of [10, 11, 12]) {
+  for (const size of [8, 9, 10]) {
     for (let seed = 1; seed <= 20; seed++) {
       const p = generateNonogram({ size, seed });
       assert.equal(p.rows.length, size);
